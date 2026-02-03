@@ -156,7 +156,7 @@ erDiagram
     }
 
     device_settings {
-        text device_id PK_FK
+        text device_id PK "FK to devices"
         int upload_level
         timestamptz created_at
         timestamptz updated_at
