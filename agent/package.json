@@ -1,0 +1,41 @@
+{
+    "name": "pc-insight-agent",
+    "version": "0.1.0",
+    "description": "PC health check agent CLI for pc-insight Cloud",
+    "type": "module",
+    "main": "dist/index.js",
+    "bin": {
+        "pc-insight": "dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsx src/index.ts",
+        "start": "node dist/index.js",
+        "lint": "eslint src --ext .ts",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest"
+    },
+    "keywords": [
+        "pc",
+        "health",
+        "agent",
+        "cli"
+    ],
+    "author": "Hwan Choi",
+    "license": "MIT",
+    "dependencies": {
+        "commander": "^12.1.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.0",
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
+        "eslint": "^8.56.0",
+        "tsx": "^4.7.0",
+        "typescript": "^5.4.5",
+        "vitest": "^4.0.18"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}
