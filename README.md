@@ -2,6 +2,8 @@
 
 # 🖥️ pc-insight Cloud
 
+<img width="800" height="520" alt="스크린샷 2026-02-03 오후 10 38 38" src="https://github.com/user-attachments/assets/70dc0fe5-9a1b-4916-9739-840ea3e28dbd" /><br>
+
 **당신의 PC, 이제 웹에서 한눈에 관리하세요.**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
