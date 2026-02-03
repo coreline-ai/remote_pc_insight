@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🖥️ pc-insight Cloud
+# 🖥️ pc-insight Cloud (Coreline AI)
 
 <img width="800" height="520" alt="스크린샷 2026-02-03 오후 10 38 38" src="https://github.com/user-attachments/assets/70dc0fe5-9a1b-4916-9739-840ea3e28dbd" /><br>
 
