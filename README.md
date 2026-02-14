@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🖥️ pc-insight Cloud (Coreline AI)
+# 🖥️ pc-insight AI Cloud (Coreline AI)
 
 <img width="800" height="520" alt="스크린샷 2026-02-03 오후 10 38 38" src="https://github.com/user-attachments/assets/70dc0fe5-9a1b-4916-9739-840ea3e28dbd" /><br>
 
@@ -21,18 +21,56 @@
 
 ## 📋 소개
 
-**pc-insight Cloud**는 여러 대의 PC를 웹에서 통합 관리하고, 원격으로 건강검진을 실행할 수 있는 **하이브리드 PC 관리 플랫폼**입니다.
+**pc-insight AI Cloud**는 여러 대의 PC를 웹에서 통합 관리하고, 원격으로 건강검진을 실행할 수 있는 **하이브리드 PC 관리 플랫폼**입니다.
 
 > **핵심 가치**: 분석은 로컬에서, 관리는 웹에서. 파일 내용은 절대 수집하지 않습니다.
 
-### 왜 pc-insight Cloud인가?
+### 왜 pc-insight AI Cloud인가?
 
-| 기존 방식 | pc-insight Cloud |
+| 기존 방식 | pc-insight AI Cloud |
 |-----------|------------------|
 | PC마다 일일이 확인 | 웹 대시보드에서 모든 PC 상태를 한눈에 |
 | 느려진 원인을 모름 | 자동 분석 후 원인과 해결책 제시 |
 | CLI 명령이 어려움 | 웹에서 클릭 한 번으로 점검 실행 |
 | 개인정보 우려 | 파일 내용 수집 X, 경로 기본 숨김 |
+
+---
+
+## 🆕 최신 업데이트 (2026-02-14)
+
+| 항목 | 업데이트 내용 |
+|------|---------------|
+| **브랜딩** | `pc-insight Cloud` → `pc-insight AI Cloud` 명칭 통일 |
+| **AI 코파일럿** | 디바이스 상세에서 운영자/관리자 뷰 전환 지원 |
+| **AI 엔진 선택** | `/devices`에서 전역 AI 엔진(GLM4.5 / OpenAI) 선택 지원 |
+| **자연어 질의(MVP)** | 위험 디바이스 조회를 자연어로 질의/탐색 가능 |
+| **온보딩 UX** | 새 PC 연결 팝업 개선 (원커맨드/스크립트/설치 가이드) |
+| **모바일 대응** | 새 PC 연결 팝업 내부 스크롤 지원(스마트폰 화면 대응) |
+| **세션 안정화** | 계정 전환 시 캐시 초기화로 사용자 표시 꼬임 이슈 개선 |
+| **한글화 개선** | 추세 지표/명령 히스토리 등 UI 텍스트 한글화 정리 |
+
+---
+
+## 🤖 AI 도입
+
+pc-insight AI Cloud는 리포트 조회를 넘어, **실행 가능한 조치(Action)**까지 제안하는 AI 운영 경험을 제공합니다.
+
+### AI 적용 범위
+
+| 기능 | 설명 |
+|------|------|
+| **AI 운영 코파일럿** | 최신 리포트/상태 기반 요약, 리스크 수준, 권장 액션 제안 |
+| **운영자/관리자 뷰** | 운영자: 즉시 실행 중심 / 관리자: 영향도·우선순위 중심 |
+| **자연어 질의** | "가장 위험한 PC 5대" 같은 질문으로 디바이스 탐색 |
+| **추세 분석** | 최근 7일 지표 변화(핑 지연, 디스크 여유, 시작 프로그램) 시각화 |
+| **AI 운영 지표** | 요청/성공/실패/제한/Fallback 카운트 제공 |
+
+### AI 런타임
+
+- **지원 엔진**: `GLM4.5`, `OpenAI`
+- **선택 위치**: `/devices`의 `AI 엔진 설정 (MVP)` (전역 설정)
+- **적용 범위**: 디바이스 상세 AI 요약/권장 액션 전체
+- **Fallback 전략**: API 오류/키 미설정/제한 초과 시 규칙 기반 요약으로 자동 대체
 
 ---
 
@@ -140,10 +178,10 @@ pip install -r requirements.txt
 # 환경변수 설정
 export DATABASE_URL="postgresql://user:pass@localhost:5432/pcinsight"
 export JWT_SECRET="your-secret-key"
-export CORS_ORIGINS="http://localhost:3000"
+export CORS_ORIGINS="http://localhost:3001"
 
 # 서버 실행
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
 ### 3. 웹 프론트엔드 실행
@@ -155,7 +193,7 @@ cd web
 pnpm install  # 또는 npm install
 
 # 환경변수 설정
-export NEXT_PUBLIC_API_BASE="http://localhost:8000"
+export NEXT_PUBLIC_API_BASE="http://localhost:8001"
 
 # 개발 서버 실행
 pnpm dev  # 또는 npm run dev
@@ -173,7 +211,7 @@ pnpm install && pnpm build
 pnpm link --global
 
 # PC 연결 (웹에서 발급받은 토큰 사용)
-pc-insight link <ENROLL_TOKEN> --server http://localhost:8000
+pc-insight link <ENROLL_TOKEN> --server http://localhost:8001
 
 # Agent 실행
 pc-insight agent
@@ -212,7 +250,7 @@ pc-insight agent
 
 ```mermaid
 gantt
-    title pc-insight Cloud 개발 로드맵
+    title pc-insight AI Cloud 개발 로드맵
     dateFormat  YYYY-MM
     section MVP
     인증/디바이스 관리     :done, 2026-01, 2026-02
