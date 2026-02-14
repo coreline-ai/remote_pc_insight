@@ -50,6 +50,7 @@
 | **🔌 연결 해제** | Revoke (기록 유지) / Delete (완전 삭제) |
 | **📦 Outbox & Retry** | 네트워크 장애 시 자동 재시도 |
 | **🛡️ 프라이버시** | 파일 내용 미수집, 경로 기본 숨김 |
+| **🎨 모던 UI/UX** | TailwindCSS 기반의 반응형 대시보드 및 다크 모드 지원 |
 
 ### 🟡 개발 예정 (v1)
 
@@ -95,6 +96,18 @@
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 📂 프로젝트 구조
+
+모노레포(Monorepo) 구조로 구성되어 있으며, 각 컴포넌트는 독립적인 기술 스택을 사용합니다.
+
+| 분류 | 디렉토리 | 기술 스택 | 주요 특징 |
+|------|---------|-----------|------------|
+| **Web Frontend** | `/web` | **Next.js 14** (App Router) | TailwindCSS, React Query, TypeScript 기반의 모던 웹 대시보드 |
+| **Backend API** | `/server` | **FastAPI** (Python) | AsyncPG, Pydantic, JWT Auth, RESTful API 설계 |
+| **CLI Agent** | `/agent` | **Node.js 20+** | Commander.js, Cross-platform (Win/Mac/Linux) 지원 |
 
 ---
 
