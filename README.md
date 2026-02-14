@@ -2,9 +2,12 @@
 
 # 🖥️ pc-insight AI Cloud (Coreline AI)
 
-<img width="800" height="520" alt="스크린샷 2026-02-03 오후 10 38 38" src="https://github.com/user-attachments/assets/70dc0fe5-9a1b-4916-9739-840ea3e28dbd" /><br>
-
 **당신의 PC, 이제 웹에서 한눈에 관리하세요.**
+
+<p float="left">
+  <img width="40%" height="2172" alt="screencapture-127-0-0-1-3001-2026-02-14-14_32_47" src="https://github.com/user-attachments/assets/d093623b-271b-4268-a297-9e2eb3fc62ff" />
+  <img width="40%" height="2172" alt="screencapture-127-0-0-1-3001-devices-2026-02-14-14_33_30" src="https://github.com/user-attachments/assets/56fc96db-1efe-414c-a125-02e0c23cb567" />
+</p>
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -13,7 +16,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[📖 문서](#-문서) • [🚀 빠른 시작](#-빠른-시작) • [✨ 기능](#-기능) • [📐 아키텍처](#-아키텍처) • [🗺️ 로드맵](#️-로드맵)
+[📖 문서](#-문서) • [🚀 빠른 시작](#-빠른-시작) • [✨ 기능](#-기능) • [📐 아키텍처](#-아키텍처)
 
 </div>
 
@@ -243,27 +246,6 @@ pc-insight agent
 | **Level 2** | + 전체 경로 | 옵트인 |
 
 자세한 내용은 [`docs/PRIVACY.md`](docs/PRIVACY.md)를 참조하세요.
-
----
-
-## 🗺️ 로드맵
-
-```mermaid
-gantt
-    title pc-insight AI Cloud 개발 로드맵
-    dateFormat  YYYY-MM
-    section MVP
-    인증/디바이스 관리     :done, 2026-01, 2026-02
-    원격 명령 실행         :done, 2026-01, 2026-02
-    리포트 조회            :done, 2026-01, 2026-02
-    section v1.0
-    자동 실행 설치         :active, 2026-02, 2026-03
-    체크리스트 기능        :2026-02, 2026-03
-    업로드 레벨 설정       :2026-02, 2026-03
-    section v2.0
-    실시간 진행률 (WebSocket):2026-03, 2026-04
-    조직/팀 관리           :2026-04, 2026-05
-```
 
 ---
 
