@@ -47,9 +47,65 @@ interface CommandApiResponse {
     } | null;
 }
 
+const REQUEST_TIMEOUT_MS = 15000;
+const MAX_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 300;
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeServerUrl(rawUrl: string): string {
+    let parsed: URL;
+    try {
+        parsed = new URL(rawUrl);
+    } catch {
+        throw new Error('Invalid server URL');
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol.toLowerCase())) {
+        throw new Error('Server URL must use http or https');
+    }
+    if (parsed.protocol.toLowerCase() === 'http:') {
+        const host = parsed.hostname.toLowerCase();
+        const isLocalhost = host === 'localhost' || host === '127.0.0.1';
+        if (!isLocalhost) {
+            throw new Error('Insecure HTTP is blocked for non-localhost servers');
+        }
+    }
+    return parsed.toString().replace(/\/$/, '');
+}
+
+async function fetchWithRetry(url: string, init: RequestInit, maxRetries = MAX_RETRIES): Promise<Response> {
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+        try {
+            const response = await fetch(url, { ...init, signal: controller.signal });
+            clearTimeout(timeout);
+            if (response.status >= 500 || response.status === 429) {
+                if (attempt < maxRetries) {
+                    await sleep(RETRY_BASE_DELAY_MS * (attempt + 1));
+                    continue;
+                }
+            }
+            return response;
+        } catch (error) {
+            clearTimeout(timeout);
+            lastError = error;
+            if (attempt < maxRetries) {
+                await sleep(RETRY_BASE_DELAY_MS * (attempt + 1));
+                continue;
+            }
+        }
+    }
+    throw lastError instanceof Error ? lastError : new Error('Network request failed');
+}
+
 export const apiClient = {
     async enroll(serverUrl: string, enrollToken: string, request: EnrollRequest): Promise<EnrollResponse> {
-        const response = await fetch(`${serverUrl}/v1/agent/enroll`, {
+        const baseUrl = normalizeServerUrl(serverUrl);
+        const response = await fetchWithRetry(`${baseUrl}/v1/agent/enroll`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -62,7 +118,7 @@ export const apiClient = {
                 agent_version: request.agentVersion,
                 device_fingerprint: request.deviceFingerprint,
             }),
-        });
+        }, 0);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: 'Unknown error' })) as ErrorResponse;
@@ -78,7 +134,8 @@ export const apiClient = {
     },
 
     async getNextCommand(config: Config): Promise<RemoteCommand | null> {
-        const response = await fetch(`${config.serverUrl}/v1/agent/commands/next`, {
+        const baseUrl = normalizeServerUrl(config.serverUrl);
+        const response = await fetchWithRetry(`${baseUrl}/v1/agent/commands/next`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${config.deviceToken}`,
@@ -103,7 +160,8 @@ export const apiClient = {
     },
 
     async updateCommandStatus(config: Config, commandId: string, update: CommandStatusUpdate): Promise<void> {
-        const response = await fetch(`${config.serverUrl}/v1/agent/commands/${commandId}/status`, {
+        const baseUrl = normalizeServerUrl(config.serverUrl);
+        const response = await fetchWithRetry(`${baseUrl}/v1/agent/commands/${commandId}/status`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -118,7 +176,8 @@ export const apiClient = {
     },
 
     async uploadReport(config: Config, commandId: string | undefined, report: unknown): Promise<void> {
-        const response = await fetch(`${config.serverUrl}/v1/agent/reports`, {
+        const baseUrl = normalizeServerUrl(config.serverUrl);
+        const response = await fetchWithRetry(`${baseUrl}/v1/agent/reports`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

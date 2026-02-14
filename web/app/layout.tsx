@@ -6,7 +6,7 @@ import { Providers } from '@/components/providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'pc-insight Cloud',
+    title: 'pc-insight AI Cloud',
     description: 'Multi-device PC health management dashboard',
 };
 
@@ -17,8 +17,10 @@ export default function RootLayout({
 }) {
     return (
         <html lang="ko" suppressHydrationWarning>
-            <body className={inter.className}>
-                <Providers>{children}</Providers>
+            <body className={`${inter.className} app-body`}>
+                <div className="app-shell">
+                    <Providers>{children}</Providers>
+                </div>
             </body>
         </html>
     );

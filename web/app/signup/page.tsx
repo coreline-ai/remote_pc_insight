@@ -36,13 +36,13 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-8">
-            <div className="card max-w-md w-full">
-                <div className="card-header text-center">
+            <div className="card max-w-md w-full overflow-hidden">
+                <div className="px-8 pt-8 pb-5 text-center border-b border-yellow-500/20">
                     <h1 className="text-2xl font-bold">회원가입</h1>
-                    <p className="text-slate-500 mt-1">pc-insight Cloud 계정을 생성하세요</p>
+                    <p className="text-slate-500 mt-1">pc-insight AI Cloud 계정을 생성하세요</p>
                 </div>
 
-                <form className="card-body" onSubmit={handleSubmit}>
+                <form className="px-8 py-6" onSubmit={handleSubmit}>
                     {error && (
                         <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4">
                             {error}

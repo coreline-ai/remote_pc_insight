@@ -1,13 +1,14 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 # ========== User Models ==========
 
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=8, max_length=128)
 
 
 class UserResponse(BaseModel):
@@ -16,9 +17,15 @@ class UserResponse(BaseModel):
     created_at: datetime
 
 
-class LoginRequest(BaseModel):
+class CurrentUserResponse(BaseModel):
+    id: str
     email: str
-    password: str
+
+
+class LoginRequest(BaseModel):
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    # Keep login backward-compatible for legacy accounts created before stricter signup rules.
+    password: str = Field(min_length=1, max_length=128)
 
 
 class LoginResponse(BaseModel):
@@ -36,6 +43,17 @@ class EnrollTokenCreate(BaseModel):
 class EnrollTokenResponse(BaseModel):
     token: str
     expires_at: datetime
+
+
+class EnrollTokenStatusRequest(BaseModel):
+    token: str = Field(min_length=16, max_length=256)
+
+
+class EnrollTokenStatusResponse(BaseModel):
+    status: str = Field(pattern="^(pending|used|expired|not_found)$")
+    expires_at: Optional[datetime] = None
+    used_at: Optional[datetime] = None
+    used_device_id: Optional[str] = None
 
 
 # ========== Device Models ==========
@@ -58,8 +76,25 @@ class DeviceListResponse(BaseModel):
 
 
 class DeviceDetailResponse(DeviceResponse):
-    recent_commands: List["CommandResponse"] = []
+    recent_commands: List["CommandResponse"] = Field(default_factory=list)
     latest_report: Optional["ReportSummary"] = None
+
+
+class DeviceRiskItem(BaseModel):
+    device_id: str
+    device_name: str
+    platform: str
+    is_online: bool
+    risk_score: int = Field(ge=0, le=100)
+    risk_level: str = Field(pattern="^(low|medium|high)$")
+    top_reasons: List[str] = Field(default_factory=list)
+    latest_report_id: Optional[str] = None
+    latest_report_at: Optional[datetime] = None
+
+
+class DeviceRiskTopResponse(BaseModel):
+    items: List[DeviceRiskItem] = Field(default_factory=list)
+    total: int
 
 
 # ========== Command Models ==========
@@ -103,6 +138,120 @@ class ReportDetailResponse(ReportSummary):
     raw_report_json: Optional[Dict[str, Any]] = None
 
 
+# ========== AI Copilot Models ==========
+
+class DeviceAiRecommendedAction(BaseModel):
+    command_type: str
+    label: str
+    reason: str
+
+
+class DeviceAiSummaryResponse(BaseModel):
+    enabled: bool
+    source: str
+    summary: str
+    risk_level: str = Field(default="unknown", pattern="^(low|medium|high|unknown)$")
+    reasons: List[str] = Field(default_factory=list)
+    recommended_actions: List[DeviceAiRecommendedAction] = Field(default_factory=list)
+    based_on_report_id: Optional[str] = None
+    generated_at: datetime
+
+
+class AiMetricsResponse(BaseModel):
+    requests_total: int
+    requests_success: int
+    requests_failed: int
+    requests_rate_limited: int
+    fallback_total: int
+
+
+class AiVersionUsageItem(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
+    prompt_version: str
+    model_version: str
+    count: int
+
+
+class AiVersionInfoResponse(BaseModel):
+    active_prompt_version: str
+    active_model_version: str
+    usages: List[AiVersionUsageItem] = Field(default_factory=list)
+
+
+class AiQueryRequest(BaseModel):
+    query: str = Field(min_length=3, max_length=200)
+    limit: int = Field(default=5, ge=1, le=20)
+
+
+class AiQueryItem(BaseModel):
+    device_id: str
+    device_name: str
+    score: int
+    reason: str
+
+
+class AiQueryResponse(BaseModel):
+    query: str
+    intent: str
+    answer: str
+    items: List[AiQueryItem] = Field(default_factory=list)
+
+
+class DeviceTrendSignal(BaseModel):
+    metric: str
+    current: Optional[float] = None
+    baseline: Optional[float] = None
+    delta: Optional[float] = None
+    status: str = Field(pattern="^(stable|improved|degraded|unknown)$")
+    note: str
+
+
+class DeviceTrendResponse(BaseModel):
+    device_id: str
+    period_days: int
+    signals: List[DeviceTrendSignal] = Field(default_factory=list)
+    summary: str
+
+
+class ReportExportResponse(BaseModel):
+    report_id: str
+    format: str
+    content: str
+    encoding: str = "utf-8"
+    filename: Optional[str] = None
+
+
+class ReportShareResponse(BaseModel):
+    report_id: str
+    share_token: str
+    share_url: str
+    expires_at: datetime
+
+
+class ReportShareItem(BaseModel):
+    share_id: str
+    share_token: str = ""
+    share_url: str = ""
+    expires_at: datetime
+    created_at: datetime
+    revoked_at: Optional[datetime] = None
+
+
+class ReportShareListResponse(BaseModel):
+    items: List[ReportShareItem] = Field(default_factory=list)
+
+
+class SharedReportResponse(BaseModel):
+    report_id: str
+    device_name: Optional[str] = None
+    created_at: datetime
+    one_liner: Optional[str] = None
+    health_score: Optional[int] = None
+    disk_free_percent: Optional[float] = None
+    startup_apps_count: Optional[int] = None
+
+
 # ========== Agent Models ==========
 
 class AgentEnrollRequest(BaseModel):
@@ -119,8 +268,15 @@ class AgentEnrollResponse(BaseModel):
     expires_in: int  # seconds
 
 
+class AgentCommandPayload(BaseModel):
+    id: str
+    type: str
+    params: Dict[str, Any] = Field(default_factory=dict)
+    issued_at: datetime
+
+
 class AgentNextCommandResponse(BaseModel):
-    command: Optional[CommandResponse] = None
+    command: Optional[AgentCommandPayload] = None
 
 
 class AgentStatusUpdate(BaseModel):

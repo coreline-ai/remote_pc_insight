@@ -1,25 +1,81 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from datetime import datetime, timezone
+from fastapi import Depends, HTTPException, Request, status
 from typing import Optional
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from urllib.parse import urlparse
 
-from app.core.security import decode_jwt_token, hash_token
+from app.core.config import settings
 from app.core.database import get_connection
+from app.core.security import decode_jwt_token, hash_token
 
 http_bearer = HTTPBearer(auto_error=False)
 
 
+def _origin_from_url(value: Optional[str]) -> str:
+    if not value:
+        return ""
+    parsed = urlparse(value)
+    if not parsed.scheme or not parsed.netloc:
+        return ""
+    return f"{parsed.scheme}://{parsed.netloc}".lower()
+
+
+def _is_state_changing_request(request: Request) -> bool:
+    return request.method.upper() in {"POST", "PUT", "PATCH", "DELETE"}
+
+
+def enforce_csrf_for_cookie_request(request: Request) -> None:
+    if not settings.enforce_csrf_for_cookie_auth:
+        return
+    if not _is_state_changing_request(request):
+        return
+
+    origin = _origin_from_url(request.headers.get("origin"))
+    if not origin:
+        origin = _origin_from_url(request.headers.get("referer"))
+    allowed_origins = {origin_value.lower() for origin_value in settings.cors_origins}
+    if not origin:
+        # Non-browser clients in local/test environments often omit Origin/Referer.
+        if settings.environment.lower() in {"development", "test"}:
+            return
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRF origin validation failed",
+        )
+    if origin not in allowed_origins:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRF origin validation failed",
+        )
+
+    csrf_value = request.headers.get(settings.csrf_header_name, "").strip()
+    if csrf_value != "1":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRF token missing",
+        )
+
+
 async def get_current_user(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(http_bearer),
 ) -> dict:
     """Get current authenticated user from JWT token."""
-    if credentials is None:
+    raw_token: Optional[str] = None
+    if credentials and credentials.credentials:
+        raw_token = credentials.credentials
+    else:
+        enforce_csrf_for_cookie_request(request)
+        raw_token = request.cookies.get(settings.auth_cookie_name)
+
+    if not raw_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    payload = decode_jwt_token(credentials.credentials)
+    payload = decode_jwt_token(raw_token)
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,14 +106,15 @@ async def get_current_user(
 
 
 async def get_current_user_optional(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(http_bearer),
 ) -> Optional[dict]:
     """Get current user if authenticated, None otherwise."""
-    if credentials is None:
+    if credentials is None and not request.cookies.get(settings.auth_cookie_name):
         return None
     
     try:
-        return await get_current_user(credentials)
+        return await get_current_user(request, credentials)
     except HTTPException:
         return None
 
@@ -148,7 +205,7 @@ async def verify_enroll_token(
                 detail="Enrollment token already used",
             )
         
-        if result["expires_at"].timestamp() < __import__("time").time():
+        if result["expires_at"] < datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Enrollment token expired",

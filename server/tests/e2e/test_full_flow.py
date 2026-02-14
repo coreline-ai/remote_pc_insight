@@ -1,11 +1,10 @@
 
 import pytest
 import httpx
-import asyncio
 import subprocess
 import os
 import json
-import time
+import uuid
 
 @pytest.mark.e2e
 def test_full_flow(test_server):
@@ -21,10 +20,33 @@ def test_full_flow(test_server):
     # 1. Health Check
     resp = httpx.get(f"{base_url}/health")
     assert resp.status_code == 200
+    health_data = resp.json()
+    if health_data.get("database") != "ok":
+        pytest.skip("E2E skipped: database is unavailable")
     
-    # 2. Agent Enrollment
-    # Use the seeded token: "test-enroll-token"
-    enroll_token = "test-enroll-token"
+    # 2. Prepare user + enrollment token
+    email = f"e2e_{uuid.uuid4().hex[:8]}@local.test"
+    password = "Passw0rd!"
+    register_resp = httpx.post(
+        f"{base_url}/v1/auth/register",
+        json={"email": email, "password": password},
+    )
+    assert register_resp.status_code == 200
+
+    login_resp = httpx.post(
+        f"{base_url}/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login_resp.status_code == 200
+    access_token = login_resp.json()["access_token"]
+
+    enroll_resp = httpx.post(
+        f"{base_url}/v1/tokens/enroll",
+        json={"expires_in_minutes": 60},
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert enroll_resp.status_code == 200
+    enroll_token = enroll_resp.json()["token"]
     
     # Run Agent CLI 'link' command
     # We use 'npm run dev -- link ...' or 'npx tsx src/index.ts link ...'
@@ -67,12 +89,11 @@ def test_full_flow(test_server):
             assert config["deviceId"] is not None
             
         # 4. Verify Server DB
-        # We can query the API to list devices if we had a token?
-        # Or check DB directly (we have seed script but test runs in pytest which can use asyncpg?)
-        # For simplicity, verifying Agent Output and Config is strong evidence.
-        # Plus, we can call GET /v1/devices if we had a user token. 
-        # But we didn't log in as user.
-        # Let's trust the Agent's success message + Config presence + Server Logs (if we could see them).
+        devices_resp = httpx.get(
+            f"{base_url}/v1/devices",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert devices_resp.status_code == 200
+        assert devices_resp.json()["total"] >= 1
         
         print("\n[SUCCESS] Full Flow Verified: Server Health -> Agent Link -> Config Saved")
-

@@ -54,6 +54,7 @@ async def init_db():
                 token_hash TEXT UNIQUE NOT NULL,
                 expires_at TIMESTAMPTZ NOT NULL,
                 used_at TIMESTAMPTZ,
+                used_device_id TEXT,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
         """)
@@ -131,6 +132,74 @@ async def init_db():
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
         """)
+
+        # AI insights table (cached AI copilot summaries)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS ai_insights (
+                id TEXT PRIMARY KEY,
+                device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                report_id TEXT REFERENCES reports(id) ON DELETE CASCADE,
+                source TEXT NOT NULL,
+                summary TEXT NOT NULL,
+                risk_level TEXT NOT NULL,
+                reasons_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+                actions_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+                prompt_version TEXT NOT NULL DEFAULT 'v1',
+                model_version TEXT NOT NULL DEFAULT 'default',
+                generated_at TIMESTAMPTZ NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                UNIQUE(device_id, report_id)
+            )
+        """)
+
+        # Report share links
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS report_shares (
+                id TEXT PRIMARY KEY,
+                report_id TEXT NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                share_token TEXT UNIQUE,
+                share_token_hash TEXT UNIQUE,
+                expires_at TIMESTAMPTZ NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                revoked_at TIMESTAMPTZ
+            )
+        """)
+
+        # Backward-compatible schema upgrades
+        await conn.execute("""
+            ALTER TABLE ai_insights
+            ADD COLUMN IF NOT EXISTS prompt_version TEXT NOT NULL DEFAULT 'v1'
+        """)
+        await conn.execute("""
+            ALTER TABLE ai_insights
+            ADD COLUMN IF NOT EXISTS model_version TEXT NOT NULL DEFAULT 'default'
+        """)
+        await conn.execute("""
+            ALTER TABLE enroll_tokens
+            ADD COLUMN IF NOT EXISTS used_device_id TEXT
+        """)
+        await conn.execute("""
+            ALTER TABLE report_shares
+            ADD COLUMN IF NOT EXISTS share_token_hash TEXT
+        """)
+        await conn.execute("""
+            ALTER TABLE report_shares
+            ALTER COLUMN share_token DROP NOT NULL
+        """)
+
+        # Refresh token table (web session rotation)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TIMESTAMPTZ NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                revoked_at TIMESTAMPTZ
+            )
+        """)
         
         # Indexes for performance
         await conn.execute("""
@@ -146,4 +215,23 @@ async def init_db():
         await conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_devices_user_lastseen
             ON devices(user_id, last_seen_at DESC)
+        """)
+
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_ai_insights_device_generated
+            ON ai_insights(device_id, generated_at DESC)
+        """)
+
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_report_shares_token_expires
+            ON report_shares(share_token, expires_at DESC)
+        """)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_report_shares_token_hash_expires
+            ON report_shares(share_token_hash, expires_at DESC)
+        """)
+
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_auth_refresh_user_created
+            ON auth_refresh_tokens(user_id, created_at DESC)
         """)

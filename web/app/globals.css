@@ -2,28 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 248, 250, 252;
-  --background-end-rgb: 241, 245, 249;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 15, 23, 42;
-    --background-end-rgb: 30, 41, 59;
-  }
+:root {
+  --primary: #FFD600;
+  --primary-hover: #E6C200;
+  --background-light: #FAFAFA;
+  --background-dark: #0A0A0C;
+  --surface-dark: #161618;
+  --border-dark: #333333;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-    to bottom,
-    rgb(var(--background-start-rgb)),
-    rgb(var(--background-end-rgb))
-  );
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background-dark);
+  color: #ffffff;
   min-height: 100vh;
+}
+
+.app-body {
+  margin: 0;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 1440px;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+/* Grid Pattern Background */
+.grid-pattern {
+  background-size: 50px 50px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Vignette Effect */
+.vignette {
+  background: radial-gradient(circle at center, transparent 20%, #0A0A0C 100%);
 }
 
 /* Modern scrollbar */
@@ -37,42 +55,89 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(255, 214, 0, 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.8);
+  background: rgba(255, 214, 0, 0.5);
 }
 
 /* Card styles */
 .card {
-  @apply bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700;
+  @apply bg-gray-900/40 backdrop-blur-md rounded-2xl border border-yellow-500/30 overflow-hidden;
 }
 
 .card-header {
-  @apply px-6 py-4 border-b border-slate-200 dark:border-slate-700;
+  @apply px-6 py-5 border-b border-yellow-500/20;
+}
+
+.card-header h2 {
+  @apply text-xl font-bold leading-tight;
+}
+
+.card-header h3 {
+  @apply text-lg font-bold leading-tight;
 }
 
 .card-body {
   @apply p-6;
 }
 
+.card-hover {
+  @apply transition-all duration-300;
+}
+
+.card-hover:hover {
+  @apply border-yellow-500/50;
+}
+
 /* Button styles */
 .btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200;
 }
 
 .btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white shadow-sm;
+  background-color: var(--primary);
+  color: #000000;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
-  @apply bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200;
+  @apply bg-gray-900/60 border border-gray-700 text-gray-300;
+}
+
+.btn-secondary:hover {
+  @apply border-yellow-500 text-yellow-500;
 }
 
 .btn-danger {
-  @apply bg-red-600 hover:bg-red-700 text-white shadow-sm;
+  @apply bg-red-600 text-white border border-red-500;
+}
+
+.btn-danger:hover {
+  @apply bg-red-500;
+}
+
+.btn-neutral {
+  @apply bg-gray-900/60 border border-gray-700 text-gray-200;
+}
+
+.btn-neutral:hover {
+  @apply border-gray-500 text-white;
+}
+
+/* Icon Container */
+.icon-container {
+  @apply w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center text-yellow-500 transition-colors duration-300;
+}
+
+.group:hover .icon-container {
+  @apply bg-yellow-500 text-black;
 }
 
 /* Status badges */
@@ -81,21 +146,34 @@ body {
 }
 
 .badge-success {
-  @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+  @apply bg-green-900/30 text-green-400;
 }
 
 .badge-warning {
-  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
+  @apply bg-yellow-900/30 text-yellow-400;
 }
 
 .badge-error {
-  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  @apply bg-red-900/30 text-red-400;
 }
 
 .badge-info {
-  @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
+  @apply bg-blue-900/30 text-blue-400;
 }
 
 .badge-neutral {
-  @apply bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300;
+  @apply bg-gray-700 text-gray-300;
+}
+
+/* Form Inputs */
+input,
+select,
+textarea {
+  @apply bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500;
+  @apply focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50;
+}
+
+/* Auth pages */
+.auth-card {
+  @apply bg-gray-900/60 backdrop-blur-md border border-gray-800 rounded-2xl p-8;
 }

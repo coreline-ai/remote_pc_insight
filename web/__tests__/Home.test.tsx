@@ -1,7 +1,24 @@
 
 import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import Page from '../app/page'
+
+jest.mock('next/navigation', () => ({
+    useRouter: () => ({
+        push: jest.fn(),
+        replace: jest.fn(),
+    }),
+}));
+
+jest.mock('../lib/api', () => ({
+    api: {
+        hasValidSession: jest.fn(async () => false),
+        getMe: jest.fn(async () => {
+            throw new Error('unauthenticated');
+        }),
+        logout: jest.fn(async () => undefined),
+    },
+}));
 
 describe('Page', () => {
     it('renders a heading', () => {

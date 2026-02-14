@@ -51,11 +51,34 @@ export interface TransparencyInfo {
 
 export const analyzer = {
     async run(profile: string): Promise<Report> {
-        console.log(`   Profile: ${profile}`);
+        const normalizedProfile = normalizeProfile(profile);
+        console.log(`   Profile: ${normalizedProfile}`);
 
-        const storage = await analyzeStorage();
-        const slowdown = await analyzeSlowdown();
-        const privacy = await analyzePrivacy();
+        if (normalizedProfile === 'ping') {
+            const storage = emptyStorageSummary();
+            const slowdown = emptySlowdownSummary();
+            const privacy = emptyPrivacySummary();
+            return {
+                healthScore: 100,
+                diskFreePercent: 0,
+                startupAppsCount: 0,
+                oneLiner: '핑 점검이 완료되었습니다.',
+                storage,
+                slowdown,
+                privacy,
+                recommendations: ['연결 상태가 정상입니다.'],
+                transparency: defaultTransparencyInfo(),
+                createdAt: new Date().toISOString(),
+            };
+        }
+
+        const shouldAnalyzeStorage = ['full', 'deep', 'storage', 'downloads'].includes(normalizedProfile);
+        const shouldAnalyzeSlowdown = ['full', 'deep'].includes(normalizedProfile);
+        const shouldAnalyzePrivacy = ['full', 'deep', 'privacy', 'downloads'].includes(normalizedProfile);
+
+        const storage = shouldAnalyzeStorage ? await analyzeStorage() : emptyStorageSummary();
+        const slowdown = shouldAnalyzeSlowdown ? await analyzeSlowdown() : emptySlowdownSummary();
+        const privacy = shouldAnalyzePrivacy ? await analyzePrivacy() : emptyPrivacySummary();
 
         const healthScore = calculateHealthScore(storage, slowdown, privacy);
         const oneLiner = generateOneLiner(healthScore, storage, slowdown);
@@ -70,27 +93,71 @@ export const analyzer = {
             slowdown,
             privacy,
             recommendations,
-            transparency: {
-                collected: [
-                    'Folder sizes (Downloads, Documents, Desktop, Pictures)',
-                    'Disk usage statistics',
-                    'Startup apps count',
-                    'Process CPU usage count',
-                    'Browser cache size estimates',
-                    'System log sizes'
-                ],
-                notCollected: [
-                    'File contents',
-                    'File names (default)',
-                    'File paths (default)',
-                    'Browser history',
-                    'Personal documents content',
-                ],
-            },
+            transparency: defaultTransparencyInfo(),
             createdAt: new Date().toISOString(),
         };
     },
 };
+
+function normalizeProfile(profile: string): string {
+    if (!profile) return 'full';
+    switch (profile) {
+        case 'full':
+        case 'deep':
+        case 'storage':
+        case 'privacy':
+        case 'downloads':
+        case 'ping':
+            return profile;
+        default:
+            return 'full';
+    }
+}
+
+function defaultTransparencyInfo(): TransparencyInfo {
+    return {
+        collected: [
+            'Folder sizes (Downloads, Documents, Desktop, Pictures)',
+            'Disk usage statistics',
+            'Startup apps count',
+            'Process CPU usage count',
+            'Browser cache size estimates',
+            'System log sizes',
+        ],
+        notCollected: [
+            'File contents',
+            'File names (default)',
+            'File paths (default)',
+            'Browser history',
+            'Personal documents content',
+        ],
+    };
+}
+
+function emptyStorageSummary(): StorageSummary {
+    return {
+        folders: [],
+        totalBytes: 0,
+        freeBytes: 0,
+        freePercent: 0,
+    };
+}
+
+function emptySlowdownSummary(): SlowdownSummary {
+    return {
+        startupAppsCount: 0,
+        heavyProcessCount: 0,
+        reasons: [],
+    };
+}
+
+function emptyPrivacySummary(): PrivacySummary {
+    return {
+        browserCacheSizeBytes: 0,
+        downloadsFolderBytes: 0,
+        tempFilesBytes: 0,
+    };
+}
 
 async function getFolderSize(folderPath: string): Promise<number> {
     try {
@@ -289,19 +356,19 @@ function calculateHealthScore(
 
 function generateOneLiner(score: number, storage: StorageSummary, slowdown: SlowdownSummary): string {
     if (score >= 90) {
-        return 'PC is in excellent condition! 🎉';
+        return 'PC 상태가 매우 좋습니다! 🎉';
     } else if (score >= 70) {
-        return 'PC is doing well with minor cleanup opportunities.';
+        return 'PC 상태는 양호하며 가벼운 정리가 권장됩니다.';
     } else if (score >= 50) {
         if (storage.freePercent < 20) {
-            return 'Disk space is running low. Consider cleaning up.';
+            return '디스크 여유 공간이 부족합니다. 정리가 필요합니다.';
         }
         if (slowdown.heavyProcessCount > 0) {
-            return 'High CPU usage detected. Check running apps.';
+            return 'CPU 사용률이 높습니다. 실행 중인 앱을 점검하세요.';
         }
-        return 'Some optimization recommended for better performance.';
+        return '성능 향상을 위해 일부 최적화가 권장됩니다.';
     } else {
-        return 'PC needs attention. Multiple issues detected.';
+        return 'PC 점검이 필요합니다. 여러 이슈가 감지되었습니다.';
     }
 }
 
@@ -313,34 +380,34 @@ function generateRecommendations(
     const recommendations: string[] = [];
 
     if (storage.freePercent < 20) {
-        recommendations.push('Free up disk space by removing unused files');
+        recommendations.push('사용하지 않는 파일을 정리해 디스크 여유 공간을 확보하세요.');
     }
 
     const downloadsGB = privacy.downloadsFolderBytes / (1024 * 1024 * 1024);
     if (downloadsGB > 5) {
-        recommendations.push(`Clean up Downloads folder (${(downloadsGB).toFixed(1)} GB)`);
+        recommendations.push(`다운로드 폴더를 정리하세요 (${(downloadsGB).toFixed(1)} GB)`);
     }
 
     if (slowdown.startupAppsCount > 10) {
-        recommendations.push('Reduce startup apps for faster boot time');
+        recommendations.push('시작 프로그램을 줄여 부팅 속도를 개선하세요.');
     }
 
     if (slowdown.heavyProcessCount > 0) {
-        recommendations.push(`Close ${slowdown.heavyProcessCount} resource-heavy processes`);
+        recommendations.push(`리소스 사용량이 높은 프로세스 ${slowdown.heavyProcessCount}개를 종료하세요.`);
     }
 
     const cacheGB = privacy.browserCacheSizeBytes / (1024 * 1024 * 1024);
     if (cacheGB > 1) {
-        recommendations.push(`Clear browser cache (${cacheGB.toFixed(1)} GB)`);
+        recommendations.push(`브라우저 캐시를 정리하세요 (${cacheGB.toFixed(1)} GB)`);
     }
 
     const logsMB = privacy.tempFilesBytes / (1024 * 1024);
     if (logsMB > 500) {
-        recommendations.push(`Clear system logs (${logsMB.toFixed(0)} MB)`);
+        recommendations.push(`시스템 로그를 정리하세요 (${logsMB.toFixed(0)} MB)`);
     }
 
     if (recommendations.length === 0) {
-        recommendations.push('Your PC is well maintained! Keep it up.');
+        recommendations.push('PC가 잘 관리되고 있습니다. 현재 상태를 유지하세요.');
     }
 
     return recommendations;

@@ -33,11 +33,14 @@ describe('ConfigStore', () => {
     it('should save config correctly', async () => {
         await configStore.save(mockConfig);
 
-        expect(fs.mkdir).toHaveBeenCalledWith(configDir, { recursive: true });
+        expect(fs.mkdir).toHaveBeenCalledWith(configDir, { recursive: true, mode: 0o700 });
+        expect(fs.chmod).toHaveBeenCalledWith(configDir, 0o700);
         expect(fs.writeFile).toHaveBeenCalledWith(
             configFile,
-            JSON.stringify(mockConfig, null, 2)
+            JSON.stringify(mockConfig, null, 2),
+            { mode: 0o600 }
         );
+        expect(fs.chmod).toHaveBeenCalledWith(configFile, 0o600);
     });
 
     it('should load config correctly when file exists', async () => {
@@ -45,6 +48,7 @@ describe('ConfigStore', () => {
 
         const loaded = await configStore.load();
         expect(loaded).toEqual(mockConfig);
+        expect(fs.chmod).toHaveBeenCalledWith(configFile, 0o600);
         expect(fs.readFile).toHaveBeenCalledWith(configFile, 'utf-8');
     });
 

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>pc-insight Cloud White Cards V1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FFD600", // Vibrant Yellow
+                        "primary-hover": "#FACC15",
+                        "primary-dark": "#C2A300",
+                        "background-base": "#FFFFFF",
+                        "card-tint": "#FEFCE8", // Light Yellow-50 equivalent
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 10px 25px -5px rgba(255, 214, 0, 0.15)',
+                        'card': '0 2px 12px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .dot-pattern {
+            background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
+            background-size: 24px 24px;
+        }.fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-background-base text-gray-900 font-sans antialiased min-h-screen flex flex-col relative">
+<div class="fixed inset-0 dot-pattern pointer-events-none z-0 opacity-60"></div>
+<header class="w-full max-w-7xl mx-auto p-6 flex justify-between items-center z-20 relative">
+<div class="text-xl font-bold tracking-tighter flex items-center gap-2">
+<div class="w-9 h-9 bg-primary rounded-lg shadow-sm flex items-center justify-center text-black font-black text-xl">
+                P
+            </div>
+<span class="text-black font-bold text-lg">pc-insight</span>
+</div>
+<nav class="hidden md:flex gap-8 text-sm font-medium text-gray-600">
+<a class="hover:text-black transition-colors" href="#">Features</a>
+<a class="hover:text-black transition-colors" href="#">Pricing</a>
+<a class="hover:text-black transition-colors" href="#">Documentation</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-sm font-semibold text-gray-600 hover:text-black transition-colors hidden sm:block">Log in</button>
+<button class="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+                Contact Sales
+            </button>
+</div>
+</header>
+<main class="flex-grow flex flex-col items-center justify-center relative px-4 py-20 z-10">
+<div class="max-w-4xl mx-auto text-center">
+<h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 fade-in-up">
+<span class="text-black">pc-insight</span>
+<span class="text-primary relative inline-block">
+                    Cloud
+                    <svg class="absolute w-full h-3 -bottom-1 left-0 text-yellow-200 -z-10" preserveAspectRatio="none" viewBox="0 0 100 10">
+<path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" stroke-width="8"></path>
+</svg>
+</span>
+</h1>
+<p class="text-lg md:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed fade-in-up delay-100">
+                여러 대의 PC를 웹에서 통합 관리하고,<br class="hidden sm:block"/> 
+                원격으로 건강검진을 빠르고 안전하게 실행하세요.
+            </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-24 fade-in-up delay-200">
+<button class="bg-primary hover:bg-primary-hover text-black font-bold py-3.5 px-10 rounded-xl shadow-lg shadow-yellow-200 transition-all transform hover:-translate-y-1 flex items-center gap-2">
+                    시작하기
+                    <span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+<button class="bg-white border border-gray-200 text-gray-700 font-semibold py-3.5 px-10 rounded-xl shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all">
+                    대시보드 보기
+                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left fade-in-up delay-300">
+<div class="group relative p-8 rounded-2xl bg-white border border-gray-200 hover:border-primary/50 shadow-card hover:shadow-hover transition-all duration-300">
+<div class="w-12 h-12 mb-6 rounded-xl bg-primary/20 flex items-center justify-center text-yellow-700 group-hover:bg-primary group-hover:text-black transition-colors">
+<span class="material-symbols-outlined text-3xl">desktop_windows</span>
+</div>
+<h3 class="text-xl font-bold mb-3 text-gray-900">
+                        멀티 디바이스
+                    </h3>
+<p class="text-gray-600 text-sm leading-relaxed">
+                        여러 대의 PC를 한 화면에서 모니터링하고 관리하여 업무 효율을 높이세요.
+                    </p>
+</div>
+<div class="group relative p-8 rounded-2xl bg-white border border-gray-200 hover:border-primary/50 shadow-card hover:shadow-hover transition-all duration-300">
+<div class="w-12 h-12 mb-6 rounded-xl bg-primary/20 flex items-center justify-center text-yellow-700 group-hover:bg-primary group-hover:text-black transition-colors">
+<span class="material-symbols-outlined text-3xl">satellite_alt</span>
+</div>
+<h3 class="text-xl font-bold mb-3 text-gray-900">
+                        원격 점검
+                    </h3>
+<p class="text-gray-600 text-sm leading-relaxed">
+                        웹 브라우저만 있다면 언제 어디서나 클릭 한 번으로 PC 상태를 진단합니다.
+                    </p>
+</div>
+<div class="group relative p-8 rounded-2xl bg-white border border-gray-200 hover:border-primary/50 shadow-card hover:shadow-hover transition-all duration-300">
+<div class="w-12 h-12 mb-6 rounded-xl bg-primary/20 flex items-center justify-center text-yellow-700 group-hover:bg-primary group-hover:text-black transition-colors">
+<span class="material-symbols-outlined text-3xl">lock</span>
+</div>
+<h3 class="text-xl font-bold mb-3 text-gray-900">
+                        프라이버시
+                    </h3>
+<p class="text-gray-600 text-sm leading-relaxed">
+                        사용자의 파일 내용이나 개인정보는 절대 수집하지 않아 안심할 수 있습니다.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<footer class="w-full py-8 text-center border-t border-gray-100 bg-white/50 backdrop-blur-sm z-10">
+<div class="flex flex-col items-center justify-center gap-2">
+<p class="text-gray-500 text-sm">
+                © 2023 pc-insight. All rights reserved.
+            </p>
+<div class="flex gap-4 text-xs text-gray-400">
+<a class="hover:text-gray-600" href="#">Privacy Policy</a>
+<a class="hover:text-gray-600" href="#">Terms of Service</a>
+</div>
+</div>
+</footer>
+
+</body></html>

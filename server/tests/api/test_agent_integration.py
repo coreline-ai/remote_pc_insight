@@ -1,9 +1,10 @@
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+
 from app.main import app
-from app.core.security import generate_token, hash_token, generate_id
-from contextlib import asynccontextmanager
 
 # Mock DB Connection
 class MockConnection:
@@ -11,6 +12,9 @@ class MockConnection:
         self.execute = AsyncMock()
         self.fetchrow = AsyncMock()
         self.fetch = AsyncMock()
+
+    def transaction(self):
+        return self
 
     async def __aenter__(self):
         return self
@@ -36,22 +40,17 @@ def mock_db():
 
 @pytest.mark.anyio
 async def test_agent_enroll_success(client, mock_db):
-    # Prepare dependencies
     enroll_token = "test-enroll-token"
-    token_hash = hash_token(enroll_token)
-    
-    # Mock verify_enroll_token dependency implicitly by mocking DB or logic?
-    # Ideally we should mock the DB call that verify_enroll_token might make, 
-    # BUT verify_enroll_token is a dependency. 
-    # Let's override verify_enroll_token too for cleaner unit/integration testing of the ROUTER logic specifically.
-    # However, to test "Integration", ideally we test the whole chain. 
-    # But verify_enroll_token needs DB access to check the token.
-    
-    # Let's mock the DB response for verify_enroll_token if possible, OR override the dependency.
-    # Overriding dependency is safer for "Server Logic" testing without complex DB state setup.
-    
+
     from app.api.v1.routers.agent import verify_enroll_token
     app.dependency_overrides[verify_enroll_token] = lambda: {"token_id": "t1", "user_id": "u1"}
+    mock_db.fetchrow.return_value = {
+        "id": "t1",
+        "user_id": "u1",
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=30),
+        "used_at": None,
+    }
+    mock_db.execute.side_effect = ["INSERT 1", "INSERT 1", "INSERT 1", "UPDATE 1"]
 
     payload = {
         "device_name": "Test Device",
@@ -68,6 +67,6 @@ async def test_agent_enroll_success(client, mock_db):
     assert "device_id" in data
     assert "device_token" in data
     assert "expires_in" in data
-    
-    # Verify DB interactions
-    assert mock_db.execute.call_count >= 4 # insert device, token, settings, update enroll token
+
+    assert mock_db.execute.call_count >= 4
+    app.dependency_overrides = {}

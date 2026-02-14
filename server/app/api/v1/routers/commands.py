@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from datetime import datetime, timedelta, timezone
 import json
 
@@ -41,7 +41,7 @@ async def create_command(
     async with get_connection() as conn:
         # Verify device ownership
         device = await conn.fetchrow("""
-            SELECT id, revoked_at
+            SELECT id, revoked_at, last_seen_at
             FROM devices
             WHERE id = $1 AND user_id = $2
         """, device_id, current_user["id"])
@@ -57,10 +57,19 @@ async def create_command(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Device is revoked",
             )
-        
+
+        # Prevent commands from being queued indefinitely on offline devices
+        now = datetime.now(timezone.utc)
+        last_seen = device["last_seen_at"]
+        is_online = bool(last_seen and (now - last_seen) < timedelta(minutes=2))
+        if not is_online:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="디바이스가 오프라인 상태입니다. 에이전트 실행 후 다시 시도하세요.",
+            )
+
         # Create command
         command_id = generate_id("cmd")
-        now = datetime.now(timezone.utc)
         expires_at = now + timedelta(hours=24)  # Default 24h TTL
         
         await conn.execute("""
@@ -84,8 +93,8 @@ async def create_command(
 @router.get("/devices/{device_id}/commands", response_model=CommandListResponse)
 async def list_commands(
     device_id: str,
-    limit: int = 20,
-    offset: int = 0,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     current_user: dict = Depends(get_current_user),
 ):
     """List commands for a device."""

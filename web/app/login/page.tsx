@@ -1,16 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
+const TEST_DEFAULT_EMAIL = 'test@test.com';
+const TEST_DEFAULT_PASSWORD = '1234';
+
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState(TEST_DEFAULT_EMAIL);
+    const [password, setPassword] = useState(TEST_DEFAULT_PASSWORD);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [registeredNotice, setRegisteredNotice] = useState('');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('registered') === 'true') {
+            setRegisteredNotice('회원가입이 완료되었습니다. 로그인해 주세요.');
+        } else {
+            setRegisteredNotice('');
+        }
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        const checkSession = async () => {
+            const valid = await api.hasValidSession();
+            if (!cancelled && valid) {
+                router.replace('/devices');
+            }
+        };
+        checkSession();
+        return () => {
+            cancelled = true;
+        };
+    }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,13 +55,18 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-8">
-            <div className="card max-w-md w-full">
-                <div className="card-header text-center">
+            <div className="card max-w-md w-full overflow-hidden">
+                <div className="px-8 pt-8 pb-5 text-center border-b border-yellow-500/20">
                     <h1 className="text-2xl font-bold">로그인</h1>
-                    <p className="text-slate-500 mt-1">pc-insight Cloud에 로그인하세요</p>
+                    <p className="text-slate-500 mt-1">pc-insight AI Cloud에 로그인하세요</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="card-body">
+                <form onSubmit={handleSubmit} className="px-8 py-6">
+                    {registeredNotice && (
+                        <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 p-3 rounded-lg mb-4">
+                            {registeredNotice}
+                        </div>
+                    )}
                     {error && (
                         <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4">
                             {error}
@@ -80,6 +111,10 @@ export default function LoginPage() {
                             회원가입
                         </Link>
                     </p>
+
+                    <Link href="/" className="w-full btn btn-secondary mt-4 text-center block">
+                        홈으로 가기
+                    </Link>
                 </form>
             </div>
         </div>
