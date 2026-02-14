@@ -11,7 +11,7 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14.2-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -51,6 +51,8 @@
 | **모바일 대응** | 새 PC 연결 팝업 내부 스크롤 지원(스마트폰 화면 대응) |
 | **세션 안정화** | 계정 전환 시 캐시 초기화로 사용자 표시 꼬임 이슈 개선 |
 | **한글화 개선** | 추세 지표/명령 히스토리 등 UI 텍스트 한글화 정리 |
+| **보안 강화** | 테스트 계정 기본 비활성화, 운영 환경 보안 가드 강화, CSRF 토큰 강화, API 레이트리밋 확대 |
+| **의존성 패치** | Web 런타임 `Next.js 15.5.10` 업그레이드 및 `npm audit` 취약점 0건 확인 |
 
 ---
 
@@ -146,7 +148,7 @@ pc-insight AI Cloud는 리포트 조회를 넘어, **실행 가능한 조치(Act
 
 | 분류 | 디렉토리 | 기술 스택 | 주요 특징 |
 |------|---------|-----------|------------|
-| **Web Frontend** | `/web` | **Next.js 14** (App Router) | TailwindCSS, React Query, TypeScript 기반의 모던 웹 대시보드 |
+| **Web Frontend** | `/web` | **Next.js 15** (App Router) | TailwindCSS, React Query, TypeScript 기반의 모던 웹 대시보드 |
 | **Backend API** | `/server` | **FastAPI** (Python) | AsyncPG, Pydantic, JWT Auth, RESTful API 설계 |
 | **CLI Agent** | `/agent` | **Node.js 20+** | Commander.js, Cross-platform (Win/Mac/Linux) 지원 |
 
@@ -180,8 +182,13 @@ pip install -r requirements.txt
 
 # 환경변수 설정
 export DATABASE_URL="postgresql://user:pass@localhost:5432/pcinsight"
-export JWT_SECRET="your-secret-key"
+export JWT_SECRET="change-this-to-32+chars-secret-value"
 export CORS_ORIGINS="http://localhost:3001"
+
+# production/staging 권장
+export AUTH_COOKIE_SECURE="true"
+export ENABLE_API_DOCS="false"
+export MVP_TEST_LOGIN_ENABLED="false"
 
 # 서버 실행
 uvicorn app.main:app --reload --port 8001
@@ -259,6 +266,7 @@ pc-insight agent
 | [`docs/DB_SCHEMA.md`](docs/DB_SCHEMA.md) | 데이터베이스 스키마 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 아키텍처 설계 |
 | [`docs/SECURITY.md`](docs/SECURITY.md) | 보안 가이드 |
+| [`docs/SECURITY_REMEDIATION_EXECUTION_2026-02-14.md`](docs/SECURITY_REMEDIATION_EXECUTION_2026-02-14.md) | 보안 수정 실행 체크리스트/검증 로그 |
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | 프라이버시 정책 |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | 배포 가이드 |
 | [`docs/INSTALL_AGENT.md`](docs/INSTALL_AGENT.md) | Agent 설치 가이드 |

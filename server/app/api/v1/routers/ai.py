@@ -35,8 +35,7 @@ def _intent_from_query(query: str) -> str:
 async def get_ai_metrics(
     current_user: dict = Depends(get_current_user),
 ):
-    _ = current_user
-    metrics = get_ai_metrics_snapshot()
+    metrics = get_ai_metrics_snapshot(scope_key=f"user:{current_user['id']}")
     return AiMetricsResponse(**metrics)
 
 
@@ -52,10 +51,12 @@ async def get_ai_versions(
             """
             SELECT prompt_version, model_version, COUNT(*)::int AS count
             FROM ai_insights
-            WHERE generated_at > NOW() - INTERVAL '30 days'
+            WHERE user_id = $1
+              AND generated_at > NOW() - INTERVAL '30 days'
             GROUP BY prompt_version, model_version
             ORDER BY count DESC
-            """
+            """,
+            current_user["id"],
         )
         for row in rows:
             model_version = str(row["model_version"] or "")

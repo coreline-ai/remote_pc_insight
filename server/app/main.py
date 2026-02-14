@@ -82,9 +82,14 @@ async def root():
 
 @app.get("/health")
 async def health():
+    env = settings.environment.lower()
     try:
         async with get_connection() as conn:
             await conn.fetchval("SELECT 1")
+        if env in {"production", "staging"}:
+            return {"status": "ok"}
         return {"status": "ok", "database": "ok"}
     except Exception:
+        if env in {"production", "staging"}:
+            return {"status": "degraded"}
         return {"status": "degraded", "database": "unavailable"}

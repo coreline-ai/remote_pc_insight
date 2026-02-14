@@ -104,3 +104,13 @@ Notes:
 - [x] F-P3-1 회원가입 후 로그인 성공 안내 메시지 표시
 - [x] F-P3-2 AB variant effect 재실행 최소화
 - [x] F-P3-3 API 다운/초기화 실패 시 웹 팝업 알림(`pcinsight-api-unreachable`)
+
+## 2026-02-14 Security Remediation (Deep Pass)
+- [x] 보안 전용 실행 문서/체크리스트 생성: `docs/SECURITY_REMEDIATION_EXECUTION_2026-02-14.md`
+- [x] 테스트 계정 기본 비활성화 및 자동 시드 보안화(기존 계정 패스워드 덮어쓰기 제거)
+- [x] 운영 환경 보안 가드 강화(JWT/cookie/docs/MVP-test-login 검증)
+- [x] Web 의존성 보안 패치(`next`/`eslint-config-next` 업그레이드, audit 0)
+- [x] 명령/리포트 조회 API 레이트리밋 확장
+- [x] AI 메트릭/버전 사용자 범위 분리
+- [x] CSRF 고정값 헤더 제거, 쿠키-헤더 토큰 매칭으로 강화
+- [x] Agent outbox 파일 권한 강화(0700/0600)

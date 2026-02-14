@@ -18,6 +18,8 @@ module.exports = (phase) => {
     const nextConfig = {
         // Keep dev/build outputs separate so `next build` cannot corrupt a running dev server.
         distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
+        // Avoid dev chunk/HMR instability when switching between localhost and 127.0.0.1.
+        allowedDevOrigins: ['localhost', '127.0.0.1'],
         env: {
             NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8001',
             NEXT_PUBLIC_ENABLE_AI_COPILOT: process.env.NEXT_PUBLIC_ENABLE_AI_COPILOT || 'false',

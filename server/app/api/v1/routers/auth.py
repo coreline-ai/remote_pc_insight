@@ -49,6 +49,22 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
     )
 
 
+def _set_csrf_cookie(response: Response) -> None:
+    cookie_domain = settings.auth_cookie_domain or None
+    max_age = settings.jwt_expires_minutes * 60
+    csrf_token = generate_token()
+    response.set_cookie(
+        key=settings.csrf_cookie_name,
+        value=csrf_token,
+        max_age=max_age,
+        path=settings.auth_cookie_path,
+        domain=cookie_domain,
+        secure=settings.auth_cookie_secure,
+        httponly=False,
+        samesite=settings.auth_cookie_samesite,
+    )
+
+
 async def _issue_refresh_token(conn, user_id: str, now: datetime) -> str:
     raw_refresh = generate_token("rfr")
     await conn.execute(
@@ -66,7 +82,13 @@ async def _issue_refresh_token(conn, user_id: str, now: datetime) -> str:
 
 
 @router.get("/me", response_model=CurrentUserResponse)
-async def get_me(current_user: dict = Depends(get_current_user)):
+async def get_me(
+    http_request: Request,
+    response: Response,
+    current_user: dict = Depends(get_current_user),
+):
+    if not http_request.cookies.get(settings.csrf_cookie_name):
+        _set_csrf_cookie(response)
     return CurrentUserResponse(id=current_user["id"], email=current_user["email"])
 
 @router.post("/login", response_model=LoginResponse)
@@ -97,6 +119,7 @@ async def login(request: LoginRequest, http_request: Request, response: Response
 
     _set_access_cookie(response, access_token)
     _set_refresh_cookie(response, refresh_token)
+    _set_csrf_cookie(response)
     return LoginResponse(
         access_token=access_token,
         expires_in=settings.jwt_expires_minutes * 60,
@@ -195,6 +218,7 @@ async def refresh_session(http_request: Request, response: Response):
     new_access_token = create_jwt_token(data={"sub": row["user_id"]})
     _set_access_cookie(response, new_access_token)
     _set_refresh_cookie(response, new_refresh_token)
+    _set_csrf_cookie(response)
     return LoginResponse(
         access_token=new_access_token,
         expires_in=settings.jwt_expires_minutes * 60,
@@ -234,6 +258,14 @@ async def logout(http_request: Request, response: Response):
         domain=cookie_domain,
         secure=settings.auth_cookie_secure,
         httponly=True,
+        samesite=settings.auth_cookie_samesite,
+    )
+    response.delete_cookie(
+        key=settings.csrf_cookie_name,
+        path=settings.auth_cookie_path,
+        domain=cookie_domain,
+        secure=settings.auth_cookie_secure,
+        httponly=False,
         samesite=settings.auth_cookie_samesite,
     )
     return {"message": "Logged out"}

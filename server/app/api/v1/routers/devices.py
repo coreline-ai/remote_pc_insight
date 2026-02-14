@@ -526,6 +526,7 @@ async def get_device_ai_summary(
             trace_id=getattr(request.state, "trace_id", "unknown"),
             audience=audience,
             provider=provider_name,
+            metrics_key=f"user:{current_user['id']}",
         )
         if report:
             async with get_connection() as conn:

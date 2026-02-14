@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://postgres:postgres@localhost:5433/pcinsight_test"
     
     # JWT
-    jwt_secret: str = "change-me-in-production"
+    jwt_secret: str = "dev-local-jwt-secret-change-before-production-2026-02-14"
     jwt_algorithm: str = "HS256"
     jwt_expires_minutes: int = 60 * 24  # 1 day
     auth_cookie_name: str = "pcinsight_at"
@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     # CSRF (cookie-auth state changing requests)
     enforce_csrf_for_cookie_auth: bool = True
     csrf_header_name: str = "x-pcinsight-csrf"
+    csrf_cookie_name: str = "pcinsight_csrf"
 
     # AI Copilot
     enable_ai_copilot: bool = False
@@ -79,9 +80,9 @@ class Settings(BaseSettings):
     glm_timeout_seconds: float = 60.0
 
     # MVP test login (development/test only)
-    mvp_test_login_enabled: bool = True
-    mvp_test_login_email: str = "test@test.com"
-    mvp_test_login_password: str = "1234"
+    mvp_test_login_enabled: bool = False
+    mvp_test_login_email: str = ""
+    mvp_test_login_password: str = ""
 
     class Config:
         env_file = str(_ENV_FILE)
@@ -99,10 +100,30 @@ settings = get_settings()
 def validate_security_settings() -> None:
     env = settings.environment.lower()
     insecure_secret = (
-        settings.jwt_secret in {"change-me-in-production", "change-me", "default-secret"}
+        settings.jwt_secret in {
+            "change-me-in-production",
+            "change-me",
+            "default-secret",
+            "dev-local-jwt-secret-change-before-production-2026-02-14",
+        }
         or len(settings.jwt_secret) < 32
     )
-    if env in {"production", "staging"} and insecure_secret:
+    if env not in {"production", "staging"}:
+        return
+
+    if insecure_secret:
         raise RuntimeError(
             "Insecure JWT configuration: set a strong JWT_SECRET (>=32 chars) for production/staging."
+        )
+    if not settings.auth_cookie_secure:
+        raise RuntimeError(
+            "Insecure cookie configuration: AUTH_COOKIE_SECURE must be true for production/staging."
+        )
+    if settings.enable_api_docs:
+        raise RuntimeError(
+            "API docs must be disabled in production/staging. Set ENABLE_API_DOCS=false."
+        )
+    if settings.mvp_test_login_enabled:
+        raise RuntimeError(
+            "MVP test login must be disabled in production/staging."
         )

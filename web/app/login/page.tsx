@@ -5,13 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
-const TEST_DEFAULT_EMAIL = 'test@test.com';
-const TEST_DEFAULT_PASSWORD = '1234';
-
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState(TEST_DEFAULT_EMAIL);
-    const [password, setPassword] = useState(TEST_DEFAULT_PASSWORD);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [registeredNotice, setRegisteredNotice] = useState('');

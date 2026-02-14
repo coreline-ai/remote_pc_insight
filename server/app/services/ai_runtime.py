@@ -268,6 +268,7 @@ async def generate_device_ai_summary(
     trace_id: str,
     audience: str = "operator",
     provider: Optional[str] = None,
+    metrics_key: Optional[str] = None,
 ) -> DeviceAiSummaryResponse:
     if not settings.enable_ai_copilot:
         return apply_audience_view(rule_based, audience=audience, is_online=is_online)
@@ -276,7 +277,12 @@ async def generate_device_ai_summary(
 
     # Guardrail: in-process rate limit
     if not await check_rate_limit(rate_limit_key, settings.ai_rate_limit_per_minute):
-        record_ai_call(success=False, rate_limited=True, fallback_used=True)
+        record_ai_call(
+            success=False,
+            rate_limited=True,
+            fallback_used=True,
+            scope_key=metrics_key,
+        )
         fallback = rule_based.model_copy()
         fallback.source = "rate_limited"
         fallback.summary = "AI 요청 한도를 초과했습니다. 기본 권장 액션을 사용하세요."
@@ -286,7 +292,7 @@ async def generate_device_ai_summary(
     # Guardrail: key missing -> deterministic fallback
     _, _, api_key = _provider_runtime(provider_name)
     if not api_key:
-        record_ai_call(success=False, fallback_used=True)
+        record_ai_call(success=False, fallback_used=True, scope_key=metrics_key)
         fallback = rule_based.model_copy()
         fallback.source = "rule_based"
         fallback.summary = f"{provider_name.upper()} API 키가 없어 기본 규칙 기반 요약을 사용합니다."
@@ -314,7 +320,7 @@ async def generate_device_ai_summary(
         if not actions:
             actions = rule_based.recommended_actions[:2]
 
-        record_ai_call(success=True)
+        record_ai_call(success=True, scope_key=metrics_key)
         response = DeviceAiSummaryResponse(
             enabled=True,
             source="llm",
@@ -329,7 +335,7 @@ async def generate_device_ai_summary(
     except Exception as exc:
         error_type = classify_ai_error(exc)
         logger.warning("AI adapter fallback: trace_id=%s error_type=%s", trace_id, error_type)
-        record_ai_call(success=False, fallback_used=True)
+        record_ai_call(success=False, fallback_used=True, scope_key=metrics_key)
         fallback = rule_based.model_copy()
         fallback.source = "fallback"
         fallback.summary = "AI 생성이 실패하여 기본 규칙 기반 요약으로 대체되었습니다."

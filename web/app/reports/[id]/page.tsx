@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { useEffect, useState } from 'react';
 
@@ -23,8 +24,10 @@ type RawReportData = {
     };
 };
 
-export default function ReportDetailPage({ params }: { params: { id: string } }) {
+export default function ReportDetailPage() {
     const { isAuthenticated, isChecking } = useRequireAuth();
+    const pathname = usePathname();
+    const reportId = decodeURIComponent((pathname?.split('/').filter(Boolean).at(-1) ?? '').trim());
     const [shareLink, setShareLink] = useState<string | null>(null);
     const [origin, setOrigin] = useState('');
 
@@ -35,16 +38,16 @@ export default function ReportDetailPage({ params }: { params: { id: string } })
     }, []);
 
     const { data: report, isLoading, error } = useQuery({
-        queryKey: ['report', params.id],
-        queryFn: () => api.getReport(params.id),
-        enabled: isAuthenticated,
+        queryKey: ['report', reportId],
+        queryFn: () => api.getReport(reportId),
+        enabled: isAuthenticated && Boolean(reportId),
     });
     const exportReport = useMutation({
-        mutationFn: (format: 'markdown' | 'text' | 'pdf') => api.exportReport(params.id, format),
+        mutationFn: (format: 'markdown' | 'text' | 'pdf') => api.exportReport(reportId, format),
         onSuccess: (data, format) => {
             if (format === 'pdf') {
                 const bytes = base64ToUint8Array(data.content);
-                const filename = data.filename || `pc-insight-report-${params.id}.pdf`;
+                const filename = data.filename || `pc-insight-report-${reportId}.pdf`;
                 downloadBinaryFile(bytes, filename, 'application/pdf');
                 alert('PDF 다운로드가 시작되었습니다.');
                 return;
@@ -54,7 +57,7 @@ export default function ReportDetailPage({ params }: { params: { id: string } })
         },
     });
     const shareReport = useMutation({
-        mutationFn: () => api.shareReport(params.id, 72),
+        mutationFn: () => api.shareReport(reportId, 72),
         onSuccess: (data) => {
             const base = origin || (typeof window !== 'undefined' ? window.location.origin : '');
             setShareLink(`${base}${data.share_url}`);
@@ -65,9 +68,9 @@ export default function ReportDetailPage({ params }: { params: { id: string } })
         data: shareItems,
         refetch: refetchShares,
     } = useQuery({
-        queryKey: ['report-shares', params.id],
-        queryFn: async () => (await api.getReportShares(params.id)).items,
-        enabled: isAuthenticated,
+        queryKey: ['report-shares', reportId],
+        queryFn: async () => (await api.getReportShares(reportId)).items,
+        enabled: isAuthenticated && Boolean(reportId),
     });
     const revokeShare = useMutation({
         mutationFn: (shareRef: string) => api.revokeReportShare(shareRef),

@@ -73,10 +73,15 @@ def _build_simple_pdf(lines: list[str]) -> bytes:
 @router.get("/{report_id}", response_model=ReportDetailResponse)
 async def get_report(
     report_id: str,
+    request: Request,
     current_user: dict = Depends(get_current_user),
 ):
     """Get report details."""
     import json
+    await enforce_request_rate_limit(
+        request=request,
+        scope=f"report:detail:user:{current_user['id']}",
+    )
 
     try:
         async with get_connection() as conn:
@@ -128,9 +133,14 @@ async def get_report(
 @router.get("/{report_id}/export", response_model=ReportExportResponse)
 async def export_report(
     report_id: str,
+    request: Request,
     format: str = Query(default="markdown", pattern="^(markdown|text|pdf)$"),
     current_user: dict = Depends(get_current_user),
 ):
+    await enforce_request_rate_limit(
+        request=request,
+        scope=f"report:export:user:{current_user['id']}",
+    )
     async with get_connection() as conn:
         report = await conn.fetchrow(
             """
@@ -249,8 +259,13 @@ async def create_report_share(
 @router.get("/{report_id}/shares", response_model=ReportShareListResponse)
 async def list_report_shares(
     report_id: str,
+    request: Request,
     current_user: dict = Depends(get_current_user),
 ):
+    await enforce_request_rate_limit(
+        request=request,
+        scope=f"report:share:list:user:{current_user['id']}",
+    )
     async with get_connection() as conn:
         report = await conn.fetchrow(
             """
@@ -294,8 +309,13 @@ async def list_report_shares(
 @router.post("/share/{share_ref}/revoke")
 async def revoke_report_share(
     share_ref: str,
+    request: Request,
     current_user: dict = Depends(get_current_user),
 ):
+    await enforce_request_rate_limit(
+        request=request,
+        scope=f"report:share:revoke:user:{current_user['id']}",
+    )
     now = datetime.now(timezone.utc)
     share_hash = hash_token(share_ref)
     async with get_connection() as conn:

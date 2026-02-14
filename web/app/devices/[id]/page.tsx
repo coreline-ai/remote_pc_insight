@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AiProvider, api, Command, DeviceAiSummary, DeviceTrendResponse, ReportSummary } from '@/lib/api';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { useAbVariant } from '@/hooks/use-ab-variant';
 import { useEffect, useState } from 'react';
@@ -12,9 +13,11 @@ import {
     loadAiProviderPreference,
 } from '@/lib/ai-provider';
 
-export default function DeviceDetailPage({ params }: { params: { id: string } }) {
+export default function DeviceDetailPage() {
     const { isAuthenticated, isChecking } = useRequireAuth();
     const queryClient = useQueryClient();
+    const pathname = usePathname();
+    const deviceId = decodeURIComponent((pathname?.split('/').filter(Boolean).at(-1) ?? '').trim());
     const aiCopilotEnabled = process.env.NEXT_PUBLIC_ENABLE_AI_COPILOT === 'true';
     const defaultProvider: AiProvider = getEnvDefaultAiProvider();
     const [audience, setAudience] = useState<'operator' | 'manager'>('operator');
@@ -37,9 +40,9 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
     }, []);
 
     const { data: device, isLoading, error } = useQuery({
-        queryKey: ['device', params.id],
-        queryFn: () => api.getDevice(params.id),
-        enabled: isAuthenticated,
+        queryKey: ['device', deviceId],
+        queryFn: () => api.getDevice(deviceId),
+        enabled: isAuthenticated && Boolean(deviceId),
         refetchInterval: 5000, // Poll for updates
     });
 
@@ -48,38 +51,38 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
         isLoading: isAiSummaryLoading,
         isError: isAiSummaryError,
     } = useQuery({
-        queryKey: ['device-ai-summary', params.id, audience, provider],
+        queryKey: ['device-ai-summary', deviceId, audience, provider],
         queryFn: async () => {
             try {
-                return await api.getDeviceAiSummary(params.id, audience, provider);
+                return await api.getDeviceAiSummary(deviceId, audience, provider);
             } catch (error) {
                 console.error('Failed to load AI summary:', error);
                 return null;
             }
         },
-        enabled: isAuthenticated && aiCopilotEnabled,
+        enabled: isAuthenticated && aiCopilotEnabled && Boolean(deviceId),
         retry: false,
         refetchInterval: 30000,
     });
     const { data: aiTrends } = useQuery({
-        queryKey: ['device-ai-trends', params.id],
-        queryFn: () => api.getDeviceAiTrends(params.id),
-        enabled: isAuthenticated && aiCopilotEnabled,
+        queryKey: ['device-ai-trends', deviceId],
+        queryFn: () => api.getDeviceAiTrends(deviceId),
+        enabled: isAuthenticated && aiCopilotEnabled && Boolean(deviceId),
         refetchInterval: 60000,
     });
 
     const createCommand = useMutation({
-        mutationFn: (type: string) => api.createCommand(params.id, type),
+        mutationFn: (type: string) => api.createCommand(deviceId, type),
         onSuccess: () => {
             setCommandError('');
-            queryClient.invalidateQueries({ queryKey: ['device', params.id] });
+            queryClient.invalidateQueries({ queryKey: ['device', deviceId] });
         },
     });
 
     const revokeDevice = useMutation({
-        mutationFn: () => api.revokeDevice(params.id),
+        mutationFn: () => api.revokeDevice(deviceId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['device', params.id] });
+            queryClient.invalidateQueries({ queryKey: ['device', deviceId] });
         },
     });
 

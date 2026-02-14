@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from datetime import datetime, timedelta, timezone
 import json
 
@@ -10,6 +10,7 @@ from app.models import (
     CommandResponse,
     CommandListResponse,
 )
+from app.services.request_rate_limit import enforce_request_rate_limit
 
 router = APIRouter()
 
@@ -28,9 +29,14 @@ ALLOWED_COMMAND_TYPES = {
 async def create_command(
     device_id: str,
     request: CommandCreate,
+    http_request: Request,
     current_user: dict = Depends(get_current_user),
 ):
     """Create a new command for a device."""
+    await enforce_request_rate_limit(
+        request=http_request,
+        scope=f"commands:create:user:{current_user['id']}",
+    )
     # Validate command type
     if request.type not in ALLOWED_COMMAND_TYPES:
         raise HTTPException(
@@ -93,11 +99,16 @@ async def create_command(
 @router.get("/devices/{device_id}/commands", response_model=CommandListResponse)
 async def list_commands(
     device_id: str,
+    http_request: Request,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: dict = Depends(get_current_user),
 ):
     """List commands for a device."""
+    await enforce_request_rate_limit(
+        request=http_request,
+        scope=f"commands:list:user:{current_user['id']}",
+    )
     async with get_connection() as conn:
         # Verify ownership
         device = await conn.fetchrow(
@@ -148,9 +159,14 @@ async def list_commands(
 @router.get("/commands/{command_id}", response_model=CommandResponse)
 async def get_command(
     command_id: str,
+    http_request: Request,
     current_user: dict = Depends(get_current_user),
 ):
     """Get command details."""
+    await enforce_request_rate_limit(
+        request=http_request,
+        scope=f"commands:get:user:{current_user['id']}",
+    )
     async with get_connection() as conn:
         command = await conn.fetchrow("""
             SELECT c.id, c.type, c.status, c.progress, c.message, 

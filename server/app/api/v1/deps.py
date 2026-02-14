@@ -49,10 +49,11 @@ def enforce_csrf_for_cookie_request(request: Request) -> None:
         )
 
     csrf_value = request.headers.get(settings.csrf_header_name, "").strip()
-    if csrf_value != "1":
+    csrf_cookie = request.cookies.get(settings.csrf_cookie_name, "").strip()
+    if not csrf_cookie or csrf_value != csrf_cookie:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="CSRF token missing",
+            detail="CSRF token missing or invalid",
         )
 
 

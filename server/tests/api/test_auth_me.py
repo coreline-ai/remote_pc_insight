@@ -10,5 +10,6 @@ async def test_auth_me_returns_current_user(client):
     response = await client.get("/v1/auth/me")
     assert response.status_code == 200
     assert response.json() == {"id": "usr_1", "email": "test@example.com"}
+    set_cookie_header = response.headers.get("set-cookie", "")
+    assert "pcinsight_csrf=" in set_cookie_header
     app.dependency_overrides = {}
-

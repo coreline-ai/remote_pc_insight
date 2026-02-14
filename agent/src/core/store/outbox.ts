@@ -15,7 +15,12 @@ const OUTBOX_DIR = path.join(configStore.getConfigDir(), 'outbox');
 
 export const outboxStore = {
     async add(commandId: string | undefined, report: unknown): Promise<void> {
-        await fs.mkdir(OUTBOX_DIR, { recursive: true });
+        await fs.mkdir(OUTBOX_DIR, { recursive: true, mode: 0o700 });
+        try {
+            await fs.chmod(OUTBOX_DIR, 0o700);
+        } catch {
+            // ignore permission normalization errors
+        }
 
         const item: OutboxItem = {
             id: crypto.randomUUID(),
@@ -26,7 +31,12 @@ export const outboxStore = {
         };
 
         const filePath = path.join(OUTBOX_DIR, `${item.id}.json`);
-        await fs.writeFile(filePath, JSON.stringify(item, null, 2));
+        await fs.writeFile(filePath, JSON.stringify(item, null, 2), { mode: 0o600 });
+        try {
+            await fs.chmod(filePath, 0o600);
+        } catch {
+            // ignore permission normalization errors
+        }
     },
 
     async flush(config: Config): Promise<void> {

@@ -20,6 +20,10 @@ async def ensure_mvp_test_login_user() -> None:
         logger.warning("MVP test login seed skipped: email/password is empty")
         return
 
+    if len(password) < 8:
+        logger.warning("MVP test login seed skipped: password must be at least 8 chars")
+        return
+
     password_hash = hash_password(password)
     async with get_connection() as conn:
         row = await conn.fetchrow(
@@ -27,12 +31,7 @@ async def ensure_mvp_test_login_user() -> None:
             email,
         )
         if row:
-            await conn.execute(
-                "UPDATE users SET password_hash = $1 WHERE id = $2",
-                password_hash,
-                row["id"],
-            )
-            logger.info("MVP test login user password refreshed: %s", email)
+            logger.info("MVP test login user already exists (skipping password overwrite): %s", email)
             return
 
         await conn.execute(

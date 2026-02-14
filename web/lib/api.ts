@@ -61,6 +61,20 @@ class ApiClient {
         }
     }
 
+    private getCsrfTokenFromCookie(): string {
+        if (typeof document === 'undefined') {
+            return '';
+        }
+        const cookies = document.cookie ? document.cookie.split('; ') : [];
+        for (const cookie of cookies) {
+            const [name, ...rest] = cookie.split('=');
+            if (name === 'pcinsight_csrf') {
+                return decodeURIComponent(rest.join('='));
+            }
+        }
+        return '';
+    }
+
     setToken(token: string | null) {
         this.token = token;
         this.emitAuthChanged(Boolean(token));
@@ -81,7 +95,10 @@ class ApiClient {
         };
 
         if (typeof window !== 'undefined' && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
-            headers['X-PCInsight-CSRF'] = '1';
+            const csrfToken = this.getCsrfTokenFromCookie();
+            if (csrfToken) {
+                headers['X-PCInsight-CSRF'] = csrfToken;
+            }
         }
 
         let response: Response;
@@ -179,10 +196,16 @@ class ApiClient {
         try {
             const response = await fetch(`${apiBase}/v1/auth/refresh`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-PCInsight-CSRF': '1',
-                },
+                headers: (() => {
+                    const csrfToken = this.getCsrfTokenFromCookie();
+                    const baseHeaders: Record<string, string> = {
+                        'Content-Type': 'application/json',
+                    };
+                    if (csrfToken) {
+                        baseHeaders['X-PCInsight-CSRF'] = csrfToken;
+                    }
+                    return baseHeaders;
+                })(),
                 credentials: 'include',
                 cache: 'no-store',
             });

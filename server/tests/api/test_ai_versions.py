@@ -40,6 +40,8 @@ async def test_ai_versions_endpoint_returns_active_and_usage(client, monkeypatch
     assert body["active_model_version"] == "openai:gpt-4o-mini:gpt-4o-mini-2026-01"
     assert len(body["usages"]) == 2
     assert body["usages"][0]["count"] == 7
+    mock_conn.fetch.assert_awaited_once()
+    assert mock_conn.fetch.await_args.args[1] == "usr_1"
     app.dependency_overrides = {}
 
 
@@ -69,4 +71,6 @@ async def test_ai_versions_filters_legacy_default_model_rows(client, monkeypatch
     assert body["active_model_version"] == "glm45:GLM-4.6:default"
     assert len(body["usages"]) == 1
     assert body["usages"][0]["model_version"] == "glm45:GLM-4.6:default"
+    mock_conn.fetch.assert_awaited_once()
+    assert mock_conn.fetch.await_args.args[1] == "usr_1"
     app.dependency_overrides = {}
