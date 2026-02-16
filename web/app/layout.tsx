@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
     title: 'pc-insight AI Cloud',
     description: 'Multi-device PC health management dashboard',
+    icons: {
+        icon: '/icon.svg',
+    },
 };
 
 export default function RootLayout({

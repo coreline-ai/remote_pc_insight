@@ -7,8 +7,11 @@ import { api } from '@/lib/api';
 
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const devTestEmail = 'test@test.com';
+    const devTestPassword = 'Test@PcInsight2026!';
+    const isDev = process.env.NODE_ENV === 'development';
+    const [email, setEmail] = useState(isDev ? devTestEmail : '');
+    const [password, setPassword] = useState(isDev ? devTestPassword : '');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [registeredNotice, setRegisteredNotice] = useState('');
@@ -50,6 +53,20 @@ export default function LoginPage() {
         }
     };
 
+    const handleDevQuickLogin = async () => {
+        if (!isDev) return;
+        setError('');
+        setIsLoading(true);
+        try {
+            await api.login(devTestEmail, devTestPassword);
+            router.push('/devices');
+        } catch (err) {
+            setError((err as Error).message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center p-8">
             <div className="card max-w-md w-full overflow-hidden">
@@ -59,6 +76,21 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="px-8 py-6">
+                    {isDev && (
+                        <div className="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-3 rounded-lg mb-4 text-sm">
+                            <p className="font-semibold mb-1">개발용 테스트 계정</p>
+                            <p>ID: {devTestEmail}</p>
+                            <p>PW: {devTestPassword}</p>
+                            <button
+                                type="button"
+                                onClick={handleDevQuickLogin}
+                                disabled={isLoading}
+                                className="btn btn-secondary mt-2 text-xs px-3 py-1"
+                            >
+                                테스트 계정으로 바로 로그인
+                            </button>
+                        </div>
+                    )}
                     {registeredNotice && (
                         <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 p-3 rounded-lg mb-4">
                             {registeredNotice}

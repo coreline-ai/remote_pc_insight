@@ -1,7 +1,9 @@
+import json
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 _ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
@@ -84,6 +86,27 @@ class Settings(BaseSettings):
     mvp_test_login_email: str = ""
     mvp_test_login_password: str = ""
 
+    @field_validator("cors_origins", "trusted_hosts", mode="before")
+    @classmethod
+    def parse_list_env(cls, value: Any) -> Any:
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+        if value is None:
+            return []
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return []
+            if stripped.startswith("["):
+                try:
+                    parsed = json.loads(stripped)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except json.JSONDecodeError:
+                    pass
+            return [item.strip() for item in stripped.split(",") if item.strip()]
+        return value
+
     class Config:
         env_file = str(_ENV_FILE)
         env_file_encoding = "utf-8"
@@ -126,4 +149,23 @@ def validate_security_settings() -> None:
     if settings.mvp_test_login_enabled:
         raise RuntimeError(
             "MVP test login must be disabled in production/staging."
+        )
+    local_cors_defaults = {"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"}
+    if not settings.cors_origins:
+        raise RuntimeError(
+            "CORS_ORIGINS must be set for production/staging."
+        )
+    if all(origin in local_cors_defaults for origin in settings.cors_origins):
+        raise RuntimeError(
+            "CORS_ORIGINS must include deployed web origin(s), not only localhost."
+        )
+
+    local_trusted_defaults = {"localhost", "127.0.0.1", "testserver"}
+    if not settings.trusted_hosts:
+        raise RuntimeError(
+            "TRUSTED_HOSTS must be set for production/staging."
+        )
+    if all(host in local_trusted_defaults for host in settings.trusted_hosts):
+        raise RuntimeError(
+            "TRUSTED_HOSTS must include deployed API host(s), not only localhost."
         )

@@ -55,13 +55,14 @@ export default function DevicesPage() {
     const [tokenStatusMessage, setTokenStatusMessage] = useState('');
     const [isGeneratingToken, setIsGeneratingToken] = useState(false);
     const [isCheckingTokenStatus, setIsCheckingTokenStatus] = useState(false);
+    const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
     const [queryText, setQueryText] = useState('가장 위험한 PC 5대 보여줘');
     const [globalProvider, setGlobalProvider] = useState<AiProvider>(getEnvDefaultAiProvider());
     const aiQuery = useMutation({
         mutationFn: (query: string) => api.queryAi(query, 5),
     });
 
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8001';
 
     useEffect(() => {
         setGlobalProvider(loadAiProviderPreference());
@@ -314,35 +315,49 @@ export default function DevicesPage() {
                                 <div className="animate-pulse bg-slate-200 h-12 rounded"></div>
                             )}
 
-                            <div>
-                                <h3 className="text-lg font-bold mb-2">설치 방법</h3>
-                                <ol className="list-decimal list-inside text-sm text-slate-600 dark:text-slate-400 space-y-2">
-                                    <li>
-                                        먼저 대상 PC에 Node.js/npm이 설치되어 있는지 확인하세요.
-                                        <br />
-                                        <span className="text-xs text-slate-500 ml-5">없다면 Node.js LTS 설치 후 터미널을 다시 열어 주세요.</span>
-                                        <div className="mt-2 ml-5">
+                            <div className="rounded-lg border border-slate-300/80 dark:border-slate-700">
+                                <button
+                                    type="button"
+                                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-100/60 dark:hover:bg-slate-700/40 transition-colors"
+                                    onClick={() => setIsInstallGuideOpen((prev) => !prev)}
+                                    aria-expanded={isInstallGuideOpen}
+                                >
+                                    <h3 className="text-base font-bold">설치 방법</h3>
+                                    <span className="text-sm text-slate-500 dark:text-slate-300">
+                                        {isInstallGuideOpen ? '접기 ▲' : '펼치기 ▼'}
+                                    </span>
+                                </button>
+                                {isInstallGuideOpen && (
+                                    <div className="px-4 pb-4">
+                                        <ol className="list-decimal list-inside text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                                            <li>
+                                                먼저 대상 PC에 Node.js/npm이 설치되어 있는지 확인하세요.
+                                                <br />
+                                                <span className="text-xs text-slate-500 ml-5">없다면 Node.js LTS 설치 후 터미널을 다시 열어 주세요.</span>
+                                                <div className="mt-2 ml-5">
+                                                    <pre className="rounded-lg bg-slate-950 text-slate-100 text-xs p-3 overflow-x-auto">
+                                                        <code>{buildNodeInstallGuide(selectedOs)}</code>
+                                                    </pre>
+                                                </div>
+                                            </li>
+                                            <li>위 원커맨드를 실행하거나 스크립트를 다운로드 후 실행하세요.</li>
+                                            <li>실행 후 에이전트를 켠 상태로 두고, 여기서 연결 확인을 눌러 등록 상태를 확인하세요.</li>
+                                        </ol>
+                                        <div className="mt-3 ml-5">
+                                            <p className="text-xs text-slate-400 mb-1">스크립트 실행 예시</p>
                                             <pre className="rounded-lg bg-slate-950 text-slate-100 text-xs p-3 overflow-x-auto">
-                                                <code>{buildNodeInstallGuide(selectedOs)}</code>
+                                                <code>{buildScriptRunGuide(selectedOs)}</code>
                                             </pre>
                                         </div>
-                                    </li>
-                                    <li>위 원커맨드를 실행하거나 스크립트를 다운로드 후 실행하세요.</li>
-                                    <li>실행 후 에이전트를 켠 상태로 두고, 여기서 연결 확인을 눌러 등록 상태를 확인하세요.</li>
-                                </ol>
-                                <div className="mt-3 ml-5">
-                                    <p className="text-xs text-slate-400 mb-1">스크립트 실행 예시</p>
-                                    <pre className="rounded-lg bg-slate-950 text-slate-100 text-xs p-3 overflow-x-auto">
-                                        <code>{buildScriptRunGuide(selectedOs)}</code>
-                                    </pre>
-                                </div>
-                                <p className="text-xs text-amber-500 mt-2">
-                                    토큰은 1회성입니다. 타인에게 공유하지 마세요.
-                                </p>
-                                {tokenStatusMessage && (
-                                    <p className="text-sm mt-2 text-sky-400">{tokenStatusMessage}</p>
+                                        <p className="text-xs text-amber-500 mt-2">
+                                            토큰은 1회성입니다. 타인에게 공유하지 마세요.
+                                        </p>
+                                    </div>
                                 )}
                             </div>
+                            {tokenStatusMessage && (
+                                <p className="text-sm mt-1 text-sky-400">{tokenStatusMessage}</p>
+                            )}
                         </div>
 
                         <div className="mt-8 flex justify-end">

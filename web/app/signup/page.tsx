@@ -99,6 +99,10 @@ export default function SignupPage() {
                             로그인
                         </Link>
                     </p>
+
+                    <Link href="/" className="w-full btn btn-secondary mt-4 text-center block">
+                        홈으로 가기
+                    </Link>
                 </form>
             </div>
         </div>

@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: pc-insight-api
+    runtime: python
+    plan: free
+    rootDir: server
+    buildCommand: pip install -U pip && pip install .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: AUTH_COOKIE_SECURE
+        value: "true"
+      - key: AUTH_COOKIE_SAMESITE
+        value: none
+      - key: AUTH_COOKIE_DOMAIN
+        value: ""
+      - key: ENABLE_API_DOCS
+        value: "false"
+      - key: MVP_TEST_LOGIN_ENABLED
+        value: "false"
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
+      - key: CORS_ORIGINS
+        value: "https://<your-web-domain>"
+      - key: TRUSTED_HOSTS
+        value: "<your-render-service>.onrender.com,<your-api-domain>"
+      - key: REDIS_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GLM_API_KEY
+        sync: false
