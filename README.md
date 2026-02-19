@@ -269,6 +269,7 @@ pc-insight agent
 | [`docs/SECURITY_REMEDIATION_EXECUTION_2026-02-14.md`](docs/SECURITY_REMEDIATION_EXECUTION_2026-02-14.md) | 보안 수정 실행 체크리스트/검증 로그 |
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | 프라이버시 정책 |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | 배포 가이드 |
+| [`docs/VERCEL_NEON_DEPLOY_CHECKLIST.md`](docs/VERCEL_NEON_DEPLOY_CHECKLIST.md) | Vercel + Neon 배포 체크리스트 |
 | [`docs/INSTALL_AGENT.md`](docs/INSTALL_AGENT.md) | Agent 설치 가이드 |
 | [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | 문제 해결 |
 

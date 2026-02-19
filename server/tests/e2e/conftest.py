@@ -1,10 +1,12 @@
 
-import pytest
 import os
-import time
-import subprocess
-import httpx
 import socket
+import subprocess
+import sys
+import time
+
+import httpx
+import pytest
 
 @pytest.fixture(scope="session")
 def e2e_env():
@@ -32,7 +34,7 @@ def test_server(e2e_env):
     # Start the server as a subprocess
     # We use a random free port to avoid conflicts with local dev servers.
     proc = subprocess.Popen(
-        ["uvicorn", "app.main:app", "--port", str(port)],
+        [sys.executable, "-m", "uvicorn", "app.main:app", "--port", str(port)],
         env=os.environ.copy(),
         cwd=os.path.join(os.path.dirname(__file__), "../.."), # Root server dir
         stdout=subprocess.PIPE,
@@ -43,7 +45,6 @@ def test_server(e2e_env):
     # Wait for server to be ready
     base_url = f"http://localhost:{port}"
     max_retries = 20
-    import httpx
     for _ in range(max_retries):
         try:
             response = httpx.get(f"{base_url}/health")

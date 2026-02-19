@@ -56,6 +56,7 @@ async def test_generate_ai_summary_without_api_key(monkeypatch):
 @pytest.mark.anyio
 async def test_generate_ai_summary_fallback_on_adapter_error(monkeypatch):
     monkeypatch.setattr(settings, "enable_ai_copilot", True)
+    monkeypatch.setattr(settings, "ai_provider", "openai")
     monkeypatch.setattr(settings, "openai_api_key", "sk-test")
     with patch("app.services.ai_runtime.check_rate_limit", new=AsyncMock(return_value=True)):
         with patch("app.services.ai_runtime._call_provider_chat", side_effect=RuntimeError("openai 500")):

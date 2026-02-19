@@ -1,0 +1,24 @@
+# Node / Next
+node_modules/
+web/node_modules/
+agent/node_modules/
+web/.next/
+web/.next-dev/
+
+# Python
+.venv/
+server/.venv/
+__pycache__/
+*.py[cod]
+server/**/__pycache__/
+
+# Build outputs
+dist/
+agent/dist/
+
+# Test cache
+.pytest_cache/
+server/.pytest_cache/
+
+# OS / editor
+.DS_Store

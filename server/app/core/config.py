@@ -1,5 +1,5 @@
 import json
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from functools import lru_cache
 from pathlib import Path
@@ -9,6 +9,11 @@ _ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=str(_ENV_FILE),
+        env_file_encoding="utf-8",
+    )
+
     # Runtime environment
     environment: str = "development"
 
@@ -106,11 +111,6 @@ class Settings(BaseSettings):
                     pass
             return [item.strip() for item in stripped.split(",") if item.strip()]
         return value
-
-    class Config:
-        env_file = str(_ENV_FILE)
-        env_file_encoding = "utf-8"
-
 
 @lru_cache()
 def get_settings() -> Settings:

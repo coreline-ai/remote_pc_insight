@@ -10,7 +10,7 @@ def _apply_secure_baseline(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "enable_api_docs", False)
     monkeypatch.setattr(settings, "mvp_test_login_enabled", False)
     monkeypatch.setattr(settings, "cors_origins", ["https://pc-insight.example.com"])
-    monkeypatch.setattr(settings, "trusted_hosts", ["pc-insight-api.onrender.com"])
+    monkeypatch.setattr(settings, "trusted_hosts", ["pc-insight-api.vercel.app"])
 
 
 def test_validate_security_settings_rejects_insecure_secret(monkeypatch: pytest.MonkeyPatch):

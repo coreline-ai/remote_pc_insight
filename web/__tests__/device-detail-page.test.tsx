@@ -5,6 +5,7 @@ import DeviceDetailPage from '../app/devices/[id]/page';
 
 const mockUseRequireAuth = jest.fn();
 const mockUseAbVariant = jest.fn();
+const mockUsePathname = jest.fn();
 
 const mockGetDevice = jest.fn();
 const mockGetDeviceAiSummary = jest.fn();
@@ -18,6 +19,10 @@ jest.mock('../hooks/use-require-auth', () => ({
 
 jest.mock('../hooks/use-ab-variant', () => ({
     useAbVariant: () => mockUseAbVariant(),
+}));
+
+jest.mock('next/navigation', () => ({
+    usePathname: () => mockUsePathname(),
 }));
 
 jest.mock('../lib/api', () => ({
@@ -96,6 +101,7 @@ function makeTrends(overrides: Record<string, unknown> = {}) {
 }
 
 function renderPage(deviceId = 'dev_test_1') {
+    mockUsePathname.mockReturnValue(`/devices/${deviceId}`);
     const queryClient = new QueryClient({
         defaultOptions: {
             queries: {
@@ -126,6 +132,7 @@ describe('DeviceDetailPage', () => {
 
         mockUseRequireAuth.mockReturnValue({ isAuthenticated: true, isChecking: false });
         mockUseAbVariant.mockReturnValue('A');
+        mockUsePathname.mockReturnValue('/devices/dev_test_1');
 
         mockGetDevice.mockResolvedValue(makeDevice());
         mockGetDeviceAiSummary.mockResolvedValue(null);
