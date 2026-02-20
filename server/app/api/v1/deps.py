@@ -50,6 +50,12 @@ def enforce_csrf_for_cookie_request(request: Request) -> None:
 
     csrf_value = request.headers.get(settings.csrf_header_name, "").strip()
     csrf_cookie = request.cookies.get(settings.csrf_cookie_name, "").strip()
+    # In split web/api deployments (different hostnames), frontend JS cannot read
+    # api-domain cookies to mirror them into a custom header. In that case we rely
+    # on strict Origin validation above. If the header is provided, enforce strict
+    # double-submit matching.
+    if not csrf_value:
+        return
     if not csrf_cookie or csrf_value != csrf_cookie:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -116,6 +116,9 @@ class ApiClient {
         }
 
         if (!response.ok) {
+            const readError = async () =>
+                response.json().catch(() => ({ message: 'Unknown error' }));
+
             if (
                 response.status === 401
                 && allowRefresh
@@ -129,10 +132,27 @@ class ApiClient {
                     return this.request<T>(method, path, body, false);
                 }
             }
+            if (
+                response.status === 403
+                && allowRefresh
+                && this.isStateChangingMethod(method)
+                && path !== '/v1/auth/login'
+                && path !== '/v1/auth/register'
+                && path !== '/v1/auth/refresh'
+                && path !== '/v1/auth/logout'
+            ) {
+                const error = await readError();
+                if (this.isCsrfFailure(error)) {
+                    const recovered = await this.recoverCsrfCookie();
+                    if (recovered) {
+                        return this.request<T>(method, path, body, false);
+                    }
+                }
+            }
             if (response.status === 401) {
                 this.emitAuthChanged(false);
             }
-            const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+            const error = await readError();
             throw new Error(this.toErrorMessage(error, response.status));
         }
 
@@ -155,6 +175,32 @@ class ApiClient {
             if (msgs.length > 0) return msgs.join(', ');
         }
         return `요청 처리 중 오류가 발생했습니다. (HTTP ${status})`;
+    }
+
+    private isStateChangingMethod(method: string): boolean {
+        return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+    }
+
+    private isCsrfFailure(error: any): boolean {
+        const message = this.toErrorMessage(error, 403).toLowerCase();
+        return message.includes('csrf');
+    }
+
+    private async recoverCsrfCookie(): Promise<boolean> {
+        if (typeof window === 'undefined') {
+            return false;
+        }
+        const apiBase = this.getApiBase();
+        try {
+            const response = await fetch(`${apiBase}/v1/auth/me`, {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store',
+            });
+            return response.ok;
+        } catch {
+            return false;
+        }
     }
 
     // Auth

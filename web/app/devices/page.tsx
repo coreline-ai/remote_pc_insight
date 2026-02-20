@@ -81,7 +81,12 @@ export default function DevicesPage() {
             setEnrollToken(result.token);
         } catch (e) {
             console.error(e);
-            setTokenStatusMessage('토큰 발급에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+            const message = e instanceof Error ? e.message : '';
+            setTokenStatusMessage(
+                message
+                    ? `토큰 발급 실패: ${message}`
+                    : '토큰 발급에 실패했습니다. 잠시 후 다시 시도해 주세요.'
+            );
         } finally {
             setIsGeneratingToken(false);
         }
