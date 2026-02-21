@@ -9,6 +9,8 @@
   <img width="40%" height="2172" alt="screencapture-127-0-0-1-3001-devices-2026-02-14-14_33_30" src="https://github.com/user-attachments/assets/56fc96db-1efe-414c-a125-02e0c23cb567" />
 </p>
 
+라이브데모 : https://remote-pc-insight.vercel.app/
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
