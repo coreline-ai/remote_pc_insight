@@ -13,8 +13,7 @@
 
 소개 영상:
 
-https://github.com/user-attachments/assets/77baf98e-3c5d-41d0-8ed1-afd9014d7389
-
+https://github.com/user-attachments/assets/fa996753-4832-45e9-8909-d816882b5d6c
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
