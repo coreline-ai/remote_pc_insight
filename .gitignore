@@ -15,6 +15,7 @@ server/**/__pycache__/
 # Build outputs
 dist/
 agent/dist/
+tmp/
 
 # Test cache
 .pytest_cache/

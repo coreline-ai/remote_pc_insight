@@ -11,6 +11,11 @@
 
 라이브데모 : https://remote-pc-insight.vercel.app/
 
+소개 영상:
+- 저장소 파일: [`web/public/intro.mp4`](web/public/intro.mp4)
+- 작업 산출물: [`tmp/intro.mp4`](tmp/intro.mp4)
+- 로컬 재생 URL: `http://localhost:3001/intro.mp4`
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
@@ -41,11 +46,12 @@
 
 ---
 
-## 🆕 최신 업데이트 (2026-02-14)
+## 🆕 최신 업데이트 (2026-02-25)
 
 | 항목 | 업데이트 내용 |
 |------|---------------|
 | **브랜딩** | `pc-insight Cloud` → `pc-insight AI Cloud` 명칭 통일 |
+| **콘텐츠 제작** | 무료 로컬 영상 파이프라인(`scripts/generate_intro_video_free.sh`) 및 가이드 추가 |
 | **AI 코파일럿** | 디바이스 상세에서 운영자/관리자 뷰 전환 지원 |
 | **AI 엔진 선택** | `/devices`에서 전역 AI 엔진(GLM4.5 / OpenAI) 선택 지원 |
 | **자연어 질의(MVP)** | 위험 디바이스 조회를 자연어로 질의/탐색 가능 |
@@ -229,6 +235,22 @@ pc-insight link <ENROLL_TOKEN> --server http://localhost:8001
 pc-insight agent
 ```
 
+### 5. 무료 소개 영상 생성 (선택)
+
+```bash
+# macOS
+brew install ffmpeg
+
+# 1분 미만 무음 자막 소개 영상 생성
+./scripts/generate_intro_video_free.sh --force
+```
+
+- 출력 파일:
+  - `tmp/intro.mp4`
+  - `web/public/intro.mp4`
+- 랜딩 노출:
+  - `NEXT_PUBLIC_INTRO_VIDEO_URL=/intro.mp4`
+
 ---
 
 ## 🛠️ 원격 명령 타입
@@ -270,6 +292,7 @@ pc-insight agent
 | [`docs/SECURITY.md`](docs/SECURITY.md) | 보안 가이드 |
 | [`docs/SECURITY_REMEDIATION_EXECUTION_2026-02-14.md`](docs/SECURITY_REMEDIATION_EXECUTION_2026-02-14.md) | 보안 수정 실행 체크리스트/검증 로그 |
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | 프라이버시 정책 |
+| [`docs/INTRO_VIDEO_GUIDE_FREE.md`](docs/INTRO_VIDEO_GUIDE_FREE.md) | 무료 로컬 기반 웹 소개 영상 생성 가이드(FFmpeg + ComfyUI/Wan 옵션) |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | 배포 가이드 |
 | [`docs/VERCEL_NEON_DEPLOY_CHECKLIST.md`](docs/VERCEL_NEON_DEPLOY_CHECKLIST.md) | Vercel + Neon 배포 체크리스트 |
 | [`docs/INSTALL_AGENT.md`](docs/INSTALL_AGENT.md) | Agent 설치 가이드 |

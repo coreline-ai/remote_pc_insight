@@ -3,6 +3,8 @@ import HomeDashboardLink from '@/components/home-dashboard-link';
 import HomeStartButton from '@/components/home-start-button';
 
 export default function HomePage() {
+    const introVideoUrl = process.env.NEXT_PUBLIC_INTRO_VIDEO_URL?.trim();
+
     return (
         <main className="min-h-screen flex flex-col relative overflow-hidden">
             {/* Background Effects */}
@@ -44,6 +46,21 @@ export default function HomePage() {
                         <HomeStartButton />
                         <HomeDashboardLink />
                     </div>
+
+                    {introVideoUrl ? (
+                        <div className="w-full max-w-4xl mx-auto mb-16">
+                            <div className="rounded-2xl overflow-hidden border border-yellow-500/30 bg-black/40 backdrop-blur-md">
+                                <video
+                                    className="w-full h-auto"
+                                    src={introVideoUrl}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                />
+                            </div>
+                            <p className="mt-3 text-xs text-gray-500">소개 영상</p>
+                        </div>
+                    ) : null}
 
                     {/* Feature Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left">
