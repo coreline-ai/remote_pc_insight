@@ -4,8 +4,6 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_PATH="$ROOT_DIR/tmp/intro.mp4"
 WEB_PUBLIC_OUT="$ROOT_DIR/web/public/intro.mp4"
-WHITE_BG="$ROOT_DIR/docs/design/white/screen.png"
-BLACK_BG="$ROOT_DIR/docs/design/black/screen.png"
 
 DURATION=48
 WIDTH=1920
@@ -15,6 +13,8 @@ FORCE=0
 
 FONT_FILE="${FONT_FILE:-}"
 FFMPEG_BIN="${FFMPEG_BIN:-ffmpeg}"
+APP_BASE_URL="${APP_BASE_URL:-http://127.0.0.1:3001}"
+CHROME_BIN="${CHROME_BIN:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 
 usage() {
   cat <<'USAGE'
@@ -32,6 +32,9 @@ Options:
 
 Environment:
   FONT_FILE          Optional drawtext font path for Korean subtitles
+  APP_BASE_URL       Web base URL to capture (default: http://127.0.0.1:3001)
+  CHROME_BIN         Chrome executable path for headless screenshots
+  FFMPEG_BIN         ffmpeg executable path
 USAGE
 }
 
@@ -47,7 +50,7 @@ is_int() {
 has_drawtext_filter() {
   local bin="$1"
   local filters
-  filters="$("$bin" -hide_banner -filters 2>/dev/null || true)"
+  filters="$($bin -hide_banner -filters 2>/dev/null || true)"
   grep -q "drawtext" <<<"$filters"
 }
 
@@ -119,9 +122,6 @@ is_int "$FPS" || die "--fps must be an integer"
 (( HEIGHT >= 360 )) || die "--height must be >= 360"
 (( FPS >= 24 && FPS <= 60 )) || die "--fps must be in 24-60"
 
-[[ -f "$WHITE_BG" ]] || die "Missing background image: $WHITE_BG"
-[[ -f "$BLACK_BG" ]] || die "Missing background image: $BLACK_BG"
-
 if ! command -v "$FFMPEG_BIN" >/dev/null 2>&1; then
   die "ffmpeg binary not found: $FFMPEG_BIN"
 fi
@@ -134,6 +134,9 @@ if ! has_drawtext_filter "$FFMPEG_BIN"; then
     die "drawtext filter is unavailable in ffmpeg. Install ffmpeg-full or set FFMPEG_BIN to a drawtext-capable binary."
   fi
 fi
+
+[[ -x "$CHROME_BIN" ]] || die "Chrome binary not found: $CHROME_BIN"
+curl -fsS --max-time 3 "$APP_BASE_URL" >/dev/null || die "Cannot reach APP_BASE_URL: $APP_BASE_URL"
 
 if [[ -n "$FONT_FILE" ]]; then
   [[ -f "$FONT_FILE" ]] || die "FONT_FILE not found: $FONT_FILE"
@@ -150,11 +153,33 @@ fi
 
 mkdir -p "$(dirname "$OUT_PATH")" "$ROOT_DIR/tmp" "$ROOT_DIR/web/public"
 
+FRAME_DIR="$(mktemp -d)"
 FILTER_SCRIPT="$(mktemp)"
 cleanup() {
+  rm -rf "$FRAME_DIR"
   rm -f "$FILTER_SCRIPT"
 }
 trap cleanup EXIT
+
+capture_page() {
+  local route="$1"
+  local out="$2"
+  "$CHROME_BIN" \
+    --headless=new \
+    --disable-gpu \
+    --hide-scrollbars \
+    --window-size="${WIDTH},${HEIGHT}" \
+    --virtual-time-budget=6000 \
+    --screenshot="$out" \
+    "${APP_BASE_URL}${route}" >/dev/null 2>&1
+}
+
+capture_page "/" "$FRAME_DIR/landing.png"
+capture_page "/login" "$FRAME_DIR/login.png"
+capture_page "/signup" "$FRAME_DIR/signup.png"
+
+SEG1_END="$(awk -v d="$DURATION" 'BEGIN { printf "%.3f", d * 0.40 }')"
+SEG2_END="$(awk -v d="$DURATION" 'BEGIN { printf "%.3f", d * 0.72 }')"
 
 declare -a TIMEPOINTS
 for i in {0..8}; do
@@ -162,25 +187,28 @@ for i in {0..8}; do
 done
 
 CAPTIONS=(
-  "pc-insight AI Cloud"
-  "여러 대의 PC를 웹에서 한눈에 관리"
-  "원격 건강검진을 클릭 한 번에 실행"
-  "AI 코파일럿이 위험도와 우선순위 제안"
-  "디스크 네트워크 시작프로그램 추세 분석"
-  "파일 내용은 수집하지 않는 프라이버시 설계"
-  "Agent 연결 명령 실행 리포트 확인까지"
-  "지금 바로 pc-insight AI Cloud를 시작하세요"
+  "현재 코드 기준 pc-insight AI Cloud 소개"
+  "최신 랜딩 페이지를 자동 캡처"
+  "원격 점검과 멀티 디바이스 관리"
+  "로그인 화면 기반 운영 진입 흐름"
+  "회원가입 화면 기반 온보딩 흐름"
+  "보안 중심 인증과 권한 기반 접근"
+  "웹에서 에이전트 연동 후 원격 실행"
+  "Coreline AI - pc-insight AI Cloud"
 )
 
 {
-  echo "[1:v]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},format=rgba[white];"
-  echo "[2:v]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},format=rgba[black];"
-  echo "[0:v][black]overlay=0:0:enable='between(t,${TIMEPOINTS[0]},${TIMEPOINTS[2]})+between(t,${TIMEPOINTS[4]},${TIMEPOINTS[6]})'[v01];"
-  echo "[v01][white]overlay=0:0:enable='between(t,${TIMEPOINTS[2]},${TIMEPOINTS[4]})+between(t,${TIMEPOINTS[6]},${TIMEPOINTS[8]})'[v02];"
+  echo "[1:v]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},format=rgba[landing];"
+  echo "[2:v]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},format=rgba[login];"
+  echo "[3:v]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},format=rgba[signup];"
+  echo "[0:v][landing]overlay=0:0:enable='between(t,0,${SEG1_END})'[v01];"
+  echo "[v01][login]overlay=0:0:enable='between(t,${SEG1_END},${SEG2_END})'[v02];"
+  echo "[v02][signup]overlay=0:0:enable='between(t,${SEG2_END},${DURATION})'[v03];"
 
-  printf "[v02]drawbox=x=0:y=ih-220:w=iw:h=220:color=black@0.58:t=fill,"
-  printf "drawtext=fontfile='%s':text='프로젝트 소개 영상':fontcolor=yellow:fontsize=42:x=(w-text_w)/2:y=h*0.13:shadowcolor=black@0.85:shadowx=2:shadowy=2:enable='between(t,%s,%s)'," \
-    "$FONT_FILE" "${TIMEPOINTS[0]}" "${TIMEPOINTS[1]}"
+  printf "[v03]drawbox=x=0:y=ih-220:w=iw:h=220:color=black@0.62:t=fill,"
+  printf "drawbox=x=0:y=0:w=iw:h=92:color=black@0.45:t=fill,"
+  printf "drawtext=fontfile='%s':text='pc-insight AI Cloud | Live UI Capture':fontcolor=yellow:fontsize=36:x=(w-text_w)/2:y=26:shadowcolor=black@0.85:shadowx=2:shadowy=2:enable='between(t,0,%s)'," \
+    "$FONT_FILE" "$DURATION"
 
   for i in "${!CAPTIONS[@]}"; do
     start="${TIMEPOINTS[$i]}"
@@ -189,13 +217,8 @@ CAPTIONS=(
     text="${text//:/\\:}"
     text="${text//\'/\\\'}"
 
-    size=52
-    if [[ "$i" -eq 0 ]]; then
-      size=62
-    fi
-
-    printf "drawtext=fontfile='%s':text='%s':fontcolor=white:fontsize=%s:x=(w-text_w)/2:y=h-150:shadowcolor=black@0.90:shadowx=3:shadowy=3:enable='between(t,%s,%s)'," \
-      "$FONT_FILE" "$text" "$size" "$start" "$end"
+    printf "drawtext=fontfile='%s':text='%s':fontcolor=white:fontsize=50:x=(w-text_w)/2:y=h-148:shadowcolor=black@0.90:shadowx=3:shadowy=3:enable='between(t,%s,%s)'," \
+      "$FONT_FILE" "$text" "$start" "$end"
   done
 
   echo "format=yuv420p[vout]"
@@ -208,8 +231,9 @@ fi
 
 "$FFMPEG_BIN" -hide_banner -loglevel error "$OVERWRITE_FLAG" \
   -f lavfi -i "color=c=black:s=${WIDTH}x${HEIGHT}:r=${FPS}:d=${DURATION}" \
-  -loop 1 -i "$WHITE_BG" \
-  -loop 1 -i "$BLACK_BG" \
+  -loop 1 -i "$FRAME_DIR/landing.png" \
+  -loop 1 -i "$FRAME_DIR/login.png" \
+  -loop 1 -i "$FRAME_DIR/signup.png" \
   -filter_complex_script "$FILTER_SCRIPT" \
   -map "[vout]" \
   -an \
@@ -226,5 +250,5 @@ if [[ "$OUT_PATH" != "$WEB_PUBLIC_OUT" ]]; then
   cp -f "$OUT_PATH" "$WEB_PUBLIC_OUT"
 fi
 
-echo "Generated intro video: $OUT_PATH"
+echo "Generated intro video from current UI: $OUT_PATH"
 echo "Updated landing video asset: $WEB_PUBLIC_OUT"
