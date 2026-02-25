@@ -12,9 +12,9 @@
 라이브데모 : https://remote-pc-insight.vercel.app/
 
 소개 영상:
-- 저장소 파일: [`web/public/intro.mp4`](web/public/intro.mp4)
-- 작업 산출물: [`tmp/intro.mp4`](tmp/intro.mp4)
-- 로컬 재생 URL: `http://localhost:3001/intro.mp4`
+
+https://github.com/user-attachments/assets/77baf98e-3c5d-41d0-8ed1-afd9014d7389
+
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
