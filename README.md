@@ -12,7 +12,6 @@
 라이브데모 : https://remote-pc-insight.vercel.app/
 
 소개 영상:
-
 https://github.com/user-attachments/assets/fa996753-4832-45e9-8909-d816882b5d6c
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
